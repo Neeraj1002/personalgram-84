@@ -1,11 +1,38 @@
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Send, MessageCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Send, Trash2 } from 'lucide-react';
+import { useRealtimeChat } from '@/hooks/useRealtimeChat';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ChatViewProps {
   onBack: () => void;
 }
 
 const ChatView = ({ onBack }: ChatViewProps) => {
+  const [input, setInput] = useState('');
+  const { messages, sendMessage, isLoading, clearMessages } = useRealtimeChat();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+    await sendMessage(input);
+    setInput('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <div className="h-screen bg-gradient-to-br from-companion-cream via-background to-companion-cream-dark flex flex-col">
       {/* Header */}
@@ -14,30 +41,78 @@ const ChatView = ({ onBack }: ChatViewProps) => {
           <ArrowLeft className="h-6 w-6" />
         </Button>
         <h1 className="text-lg font-medium text-foreground">Your Bestie</h1>
-        <div className="w-10" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={clearMessages}
+          disabled={messages.length === 0}
+        >
+          <Trash2 className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className="p-6 rounded-full bg-companion-green-light mb-6">
-            <MessageCircle className="h-12 w-12 text-companion-green-dark mx-auto" />
+      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center max-w-md">
+              <div className="text-6xl mb-4">💚</div>
+              <h2 className="text-2xl font-medium text-foreground mb-2">Hey there! I'm Bestie</h2>
+              <p className="text-muted-foreground">
+                I'm here to listen, support, and chat about anything on your mind. What would you like to talk about today?
+              </p>
+            </div>
           </div>
-          <h2 className="text-2xl font-medium text-foreground mb-2">Chat with Your Bestie</h2>
-          <p className="text-muted-foreground mb-6 max-w-sm">
-            Your personal companion is here to listen, support, and help you grow.
-          </p>
-          <p className="text-sm text-muted-foreground">Coming soon... 🌱</p>
-        </div>
-      </div>
+        ) : (
+          <div className="space-y-4 max-w-2xl mx-auto pb-4">
+            {messages.map((msg, idx) => (
+              <div
+                key={idx}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                    msg.role === 'user'
+                      ? 'bg-companion-green text-white'
+                      : 'bg-white/80 text-foreground'
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                </div>
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white/80 rounded-2xl px-4 py-3">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </ScrollArea>
 
-      {/* Input Area (placeholder) */}
+      {/* Input Area */}
       <div className="p-4 bg-white/50 backdrop-blur-md border-t border-gray-200/20">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 px-4 py-3 bg-white/70 rounded-full border border-gray-200/30">
-            <p className="text-muted-foreground text-sm">Say something...</p>
-          </div>
-          <Button size="icon" className="rounded-full bg-companion-green text-white">
+        <div className="flex items-center gap-3 max-w-2xl mx-auto">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Say something..."
+            disabled={isLoading}
+            className="flex-1 rounded-full bg-white/70 border-gray-200/30"
+          />
+          <Button 
+            size="icon" 
+            onClick={handleSend}
+            disabled={!input.trim() || isLoading}
+            className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
