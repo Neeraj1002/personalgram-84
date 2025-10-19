@@ -7,26 +7,23 @@ import NotesView from './NotesView';
 import BottomNavigation from './BottomNavigation';
 
 const MainApp = () => {
-  const [activeTab, setActiveTab] = useState<'goals' | 'capture' | 'memories'>('capture');
-  const [currentView, setCurrentView] = useState<'main' | 'chat' | 'notes'>('main');
+  const [activeTab, setActiveTab] = useState<'bestie' | 'capture' | 'memories'>('capture');
+  const [currentView, setCurrentView] = useState<'main' | 'notes'>('main');
 
   const renderActiveView = () => {
     // Handle overlay views first
-    if (currentView === 'chat') {
-      return <ChatView onBack={() => setCurrentView('main')} />;
-    }
     if (currentView === 'notes') {
       return <NotesView onBack={() => setCurrentView('main')} />;
     }
 
     // Handle main tab views
     switch (activeTab) {
-      case 'goals':
-        return <Dashboard />;
+      case 'bestie':
+        return <ChatView onBack={() => setActiveTab('capture')} />;
       case 'capture':
         return (
           <CameraView 
-            onOpenChat={() => setCurrentView('chat')}
+            onOpenChat={() => setActiveTab('bestie')}
             onOpenNotes={() => setCurrentView('notes')}
           />
         );
@@ -35,7 +32,7 @@ const MainApp = () => {
       default:
         return (
           <CameraView 
-            onOpenChat={() => setCurrentView('chat')}
+            onOpenChat={() => setActiveTab('bestie')}
             onOpenNotes={() => setCurrentView('notes')}
           />
         );

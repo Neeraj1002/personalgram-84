@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { Target, Camera, Heart } from 'lucide-react';
+import { MessageCircle, Camera, Heart } from 'lucide-react';
 
 interface BottomNavigationProps {
-  activeTab: 'goals' | 'capture' | 'memories';
-  onTabChange: (tab: 'goals' | 'capture' | 'memories') => void;
+  activeTab: 'bestie' | 'capture' | 'memories';
+  onTabChange: (tab: 'bestie' | 'capture' | 'memories') => void;
 }
 
 const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => {
@@ -13,15 +13,15 @@ const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => 
         <Button
           variant="ghost"
           size="lg"
-          onClick={() => onTabChange('goals')}
+          onClick={() => onTabChange('bestie')}
           className={`flex flex-col items-center gap-1 h-auto py-3 px-6 ${
-            activeTab === 'goals' 
+            activeTab === 'bestie' 
               ? 'text-companion-green' 
               : 'text-white/70 hover:text-white'
           }`}
         >
-          <Target className="h-6 w-6" />
-          <span className="text-xs">Goals</span>
+          <MessageCircle className="h-6 w-6" />
+          <span className="text-xs">Bestie</span>
         </Button>
 
         <Button
