@@ -1,14 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, FlipHorizontal, Menu, MoreHorizontal, MessageCircle, PenTool, Target } from 'lucide-react';
+import { Camera, PenTool, Target } from 'lucide-react';
 
 interface CameraViewProps {
   onOpenChat?: () => void;
   onOpenNotes?: () => void;
+  onOpenGoals?: () => void;
 }
 
 // Goal button component with streak indicators
-const GoalButton = ({ goalIndex }: { goalIndex: number }) => {
+const GoalButton = ({ goalIndex, onClick }: { goalIndex: number; onClick?: () => void }) => {
   const [goals, setGoals] = useState<any[]>([]);
   
   useEffect(() => {
@@ -29,22 +30,32 @@ const GoalButton = ({ goalIndex }: { goalIndex: number }) => {
     new Date().getTime() - new Date(goal.lastCompleted).getTime() > 24 * 60 * 60 * 1000;
 
   return (
-    <button className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm">
+    <button 
+      onClick={onClick}
+      className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm"
+    >
       <Target className="h-6 w-6 text-white mx-auto" />
-      {/* Status indicator */}
-      <div className="absolute -top-1 -right-1 text-xs">
+      {/* Streak count on top left */}
+      {hasStreak && (
+        <div className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-companion-green text-white text-xs font-bold flex items-center justify-center border border-white">
+          {goal.streak}
+        </div>
+      )}
+      {/* Status indicator on bottom right */}
+      <div className="absolute -bottom-1 -right-1 text-xs">
         {hasStreak ? '🔥' : isOverdue ? '⌛' : ''}
       </div>
     </button>
   );
 };
 
-const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
+const CameraView = ({ onOpenChat, onOpenNotes, onOpenGoals }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasPermission, setHasPermission] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
 
   useEffect(() => {
     startCamera();
@@ -126,9 +137,27 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0);
-      // Here you could save the image or do something with it
+      const imageData = canvas.toDataURL('image/png');
+      setCapturedImage(imageData);
       console.log('Photo captured!');
     }
+  };
+
+  const handleGoalTag = (goalIndex: number) => {
+    // Load existing goals
+    const savedGoals = localStorage.getItem('companion-goals');
+    if (savedGoals) {
+      const goals = JSON.parse(savedGoals);
+      if (goals[goalIndex]) {
+        // Increment streak
+        goals[goalIndex].streak = (goals[goalIndex].streak || 0) + 1;
+        goals[goalIndex].lastCompleted = new Date().toISOString();
+        localStorage.setItem('companion-goals', JSON.stringify(goals));
+        console.log(`Goal ${goalIndex} tagged! New streak: ${goals[goalIndex].streak}`);
+      }
+    }
+    // Close the captured image view
+    setCapturedImage(null);
   };
 
   const flipCamera = () => {
@@ -164,6 +193,37 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
     );
   }
 
+  // If image is captured, show goal tagging interface
+  if (capturedImage) {
+    return (
+      <div className="h-screen bg-black relative overflow-hidden">
+        {/* Captured image */}
+        <img 
+          src={capturedImage} 
+          alt="Captured" 
+          className="w-full h-full object-cover"
+        />
+        
+        {/* Goal tagging interface */}
+        <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-6 pb-32">
+          <p className="text-white text-center mb-4 font-medium">Tag this moment to a goal</p>
+          <div className="flex items-center justify-center gap-4">
+            <GoalButton goalIndex={0} onClick={() => handleGoalTag(0)} />
+            <GoalButton goalIndex={1} onClick={() => handleGoalTag(1)} />
+            <GoalButton goalIndex={2} onClick={() => handleGoalTag(2)} />
+          </div>
+          <Button
+            onClick={() => setCapturedImage(null)}
+            variant="ghost"
+            className="text-white hover:bg-white/20 mt-4 mx-auto block"
+          >
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen bg-black relative overflow-hidden">
       {/* Camera feed */}
@@ -176,52 +236,37 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Top header */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/50 to-transparent">
-        <div className="flex items-center justify-between p-4 pt-12">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-            <Menu className="h-6 w-6" />
-          </Button>
-          <h1 className="text-white font-medium text-lg">My Space</h1>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-            <MoreHorizontal className="h-6 w-6" />
-          </Button>
-        </div>
-      </div>
-
       {/* Camera controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
         <div className="flex items-center justify-between p-6 pb-32 px-8">
-          {/* Goal buttons on the left */}
-          <div className="flex items-center gap-2">
+          {/* Goal buttons on the left - 50% space */}
+          <div className="flex items-center gap-3 flex-1 justify-start">
             <GoalButton goalIndex={0} />
             <GoalButton goalIndex={1} />
             <GoalButton goalIndex={2} />
           </div>
 
-          {/* Capture button */}
+          {/* Capture button - centered */}
           <button
             onClick={capturePhoto}
-            className="w-20 h-20 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95"
-          >
-            <div className="w-full h-full rounded-full bg-white shadow-lg" />
-          </button>
+            className="w-16 h-16 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95 flex-shrink-0"
+          />
 
-          {/* Chat and Notes buttons on the right */}
-          <div className="flex items-center gap-2">
+          {/* Goal page and Notes buttons on the right - 50% space */}
+          <div className="flex items-center gap-3 flex-1 justify-end">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onOpenChat?.()}
-              className="text-white hover:bg-white/20 rounded-full w-12 h-12"
+              onClick={() => onOpenGoals?.()}
+              className="text-white hover:bg-white/20 rounded-full w-14 h-14 flex-shrink-0"
             >
-              <MessageCircle className="h-6 w-6" />
+              <Target className="h-6 w-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenNotes?.()}
-              className="text-white hover:bg-white/20 rounded-full w-12 h-12"
+              className="text-white hover:bg-white/20 rounded-full w-14 h-14 flex-shrink-0"
             >
               <PenTool className="h-6 w-6" />
             </Button>

@@ -97,21 +97,21 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-white/50 backdrop-blur-md border-t border-gray-200/20">
+      <div className="p-4 bg-white/80 backdrop-blur-md border-t border-border">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Say something..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-white/70 border-gray-200/30"
+            className="flex-1 rounded-full bg-background border-input text-foreground placeholder:text-muted-foreground"
           />
           <Button 
             size="icon" 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white"
+            className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white flex-shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>

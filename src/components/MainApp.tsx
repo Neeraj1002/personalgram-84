@@ -25,6 +25,11 @@ const MainApp = () => {
           <CameraView 
             onOpenChat={() => setActiveTab('bestie')}
             onOpenNotes={() => setCurrentView('notes')}
+            onOpenGoals={() => {
+              // Open dashboard in notes view style
+              setCurrentView('main');
+              // We'll create a goals overlay view instead
+            }}
           />
         );
       case 'memories':
@@ -34,6 +39,9 @@ const MainApp = () => {
           <CameraView 
             onOpenChat={() => setActiveTab('bestie')}
             onOpenNotes={() => setCurrentView('notes')}
+            onOpenGoals={() => {
+              setCurrentView('main');
+            }}
           />
         );
     }
