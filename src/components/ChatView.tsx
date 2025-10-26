@@ -97,7 +97,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-white/80 backdrop-blur-md border-t border-border">
+      <div className="p-4 bg-white/90 backdrop-blur-md border-t border-gray-200">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
@@ -105,7 +105,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
             onKeyDown={handleKeyPress}
             placeholder="Say something..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-background border-input text-foreground placeholder:text-muted-foreground"
+            className="flex-1 rounded-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus-visible:ring-companion-green"
           />
           <Button 
             size="icon" 
