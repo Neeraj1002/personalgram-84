@@ -1,28 +1,23 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, PenTool, Target } from 'lucide-react';
+import { Camera, Menu, MoreHorizontal, MessageCircle, PenTool, Target, AlertCircle } from 'lucide-react';
 
 interface CameraViewProps {
   onOpenChat?: () => void;
   onOpenNotes?: () => void;
-  onOpenGoals?: () => void;
 }
 
 // Goal button component with streak indicators
-const GoalButton = ({ goalIndex, onClick }: { goalIndex: number; onClick?: () => void }) => {
-  const [goals, setGoals] = useState<any[]>([]);
-  
-  useEffect(() => {
-    const savedGoals = localStorage.getItem('companion-goals');
-    if (savedGoals) {
-      const parsedGoals = JSON.parse(savedGoals);
-      setGoals(parsedGoals);
-    }
-  }, []);
+const GoalButton = ({ goalIndex }: { goalIndex: number }) => {
+  const mockGoals = [
+    { name: 'Exercise', streak: 3, frequency: 'daily', lastCompleted: new Date().toISOString() },
+    { name: 'Read', streak: 0, frequency: 'daily', lastCompleted: null },
+    { name: 'Meditate', streak: 5, frequency: 'daily', lastCompleted: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
+  ];
 
-  const goal = goals[goalIndex];
+  const goal = mockGoals[goalIndex];
   if (!goal) {
-    return <div className="w-12 h-12" />; // Empty placeholder
+    return <div className="w-12 h-12" />;
   }
 
   const hasStreak = goal.streak > 0;
@@ -30,194 +25,201 @@ const GoalButton = ({ goalIndex, onClick }: { goalIndex: number; onClick?: () =>
     new Date().getTime() - new Date(goal.lastCompleted).getTime() > 24 * 60 * 60 * 1000;
 
   return (
-    <button 
-      onClick={onClick}
-      className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm"
-    >
+    <button className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm">
       <Target className="h-6 w-6 text-white mx-auto" />
-      {/* Streak count on top left */}
-      {hasStreak && (
-        <div className="absolute -top-1 -left-1 w-5 h-5 rounded-full bg-companion-green text-white text-xs font-bold flex items-center justify-center border border-white">
-          {goal.streak}
-        </div>
-      )}
-      {/* Status indicator on bottom right */}
-      <div className="absolute -bottom-1 -right-1 text-xs">
+      <div className="absolute -top-1 -right-1 text-xs">
         {hasStreak ? '🔥' : isOverdue ? '⌛' : ''}
       </div>
     </button>
   );
 };
 
-const CameraView = ({ onOpenChat, onOpenNotes, onOpenGoals }: CameraViewProps) => {
+const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraState, setCameraState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
-  useEffect(() => {
-    startCamera();
-    return () => stopCamera();
-  }, [facingMode]);
-
-  const startCamera = async () => {
-    try {
-      setIsLoading(true);
-      
-      // First stop any existing stream
-      stopCamera();
-      
-      console.log('🎥 Requesting camera access...');
-      
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode,
-          width: { ideal: 1280, min: 640 },
-          height: { ideal: 720, min: 480 }
-        }
-      });
-      
-      console.log('✅ Camera stream obtained');
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Simple approach: just play the video
-        videoRef.current.onloadedmetadata = () => {
-          console.log('📹 Video metadata loaded, starting playback...');
-          videoRef.current?.play()
-            .then(() => {
-              console.log('🎬 Video playing!');
-              setHasPermission(true);
-              setIsLoading(false);
-            })
-            .catch((error) => {
-              console.error('❌ Play error:', error);
-              setHasPermission(false);
-              setIsLoading(false);
-            });
-        };
-        
-        // Handle errors
-        videoRef.current.onerror = (error) => {
-          console.error('❌ Video error:', error);
-          setHasPermission(false);
-          setIsLoading(false);
-        };
-        
-      } else {
-        console.error('❌ Video ref not available');
-        setHasPermission(false);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error('❌ Camera access error:', error);
-      setHasPermission(false);
-      setIsLoading(false);
-    }
+  const addDebug = (msg: string) => {
+    console.log(msg);
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
   };
 
   const stopCamera = () => {
-    if (videoRef.current?.srcObject) {
-      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-      tracks.forEach(track => track.stop());
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      addDebug('Camera stopped');
+    }
+  };
+
+  const initCamera = async () => {
+    try {
+      addDebug('🎥 Starting camera initialization...');
+      setCameraState('loading');
+      setErrorMessage('');
+      
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia is not supported in this browser');
+      }
+      
+      addDebug('✓ MediaDevices API available');
+
+      // Stop any existing streams
+      stopCamera();
+
+      addDebug('📱 Requesting camera access...');
+      
+      // Request camera access with simpler constraints
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+
+      addDebug('✅ Camera stream obtained!');
+      addDebug(`Stream tracks: ${stream.getTracks().length}`);
+      
+      streamRef.current = stream;
+
+      // Change state to 'ready' FIRST so the video element gets rendered
+      addDebug('📺 Switching to camera view...');
+      setCameraState('ready');
+      
+      // Wait a tick for React to render the video element
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Now set up video element
+      if (!videoRef.current) {
+        throw new Error('Video element still not found after state change');
+      }
+
+      const video = videoRef.current;
+      video.srcObject = stream;
+      addDebug('📺 Stream assigned to video element');
+      
+      // Wait for metadata to load
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Timeout waiting for video metadata'));
+        }, 10000);
+
+        video.onloadedmetadata = () => {
+          clearTimeout(timeout);
+          addDebug(`📹 Metadata loaded: ${video.videoWidth}x${video.videoHeight}`);
+          resolve(true);
+        };
+
+        video.onerror = (e) => {
+          clearTimeout(timeout);
+          reject(new Error('Video element error'));
+        };
+      });
+
+      // Play the video
+      addDebug('▶️ Attempting to play video...');
+      await video.play();
+      addDebug('🎬 Video is playing!');
+      
+    } catch (err: any) {
+      addDebug(`❌ Error: ${err.message}`);
+      console.error('Camera initialization failed:', err);
+      setErrorMessage(err.message || 'Unknown error');
+      setCameraState('error');
     }
   };
 
   const capturePhoto = () => {
     if (!videoRef.current || !canvasRef.current) return;
     
-    const canvas = canvasRef.current;
     const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/png');
-      setCapturedImage(imageData);
-      console.log('Photo captured!');
+      addDebug('📸 Photo captured!');
     }
   };
 
-  const handleGoalTag = (goalIndex: number) => {
-    // Load existing goals
-    const savedGoals = localStorage.getItem('companion-goals');
-    if (savedGoals) {
-      const goals = JSON.parse(savedGoals);
-      if (goals[goalIndex]) {
-        // Increment streak
-        goals[goalIndex].streak = (goals[goalIndex].streak || 0) + 1;
-        goals[goalIndex].lastCompleted = new Date().toISOString();
-        localStorage.setItem('companion-goals', JSON.stringify(goals));
-        console.log(`Goal ${goalIndex} tagged! New streak: ${goals[goalIndex].streak}`);
-      }
-    }
-    // Close the captured image view
-    setCapturedImage(null);
-  };
-
-  const flipCamera = () => {
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-  };
-
-  if (isLoading) {
+  if (cameraState === 'idle' || cameraState === 'loading') {
     return (
-      <div className="h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-center">
+      <div className="h-screen bg-black flex items-center justify-center p-6">
+        <div className="text-white text-center max-w-md">
           <Camera className="h-12 w-12 mx-auto mb-4 animate-pulse" />
-          <p>Loading camera...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasPermission) {
-    return (
-      <div className="h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-center px-6">
-          <Camera className="h-16 w-16 mx-auto mb-4 text-white/60" />
-          <h3 className="text-xl font-medium mb-2">Camera Access Needed</h3>
-          <p className="text-white/80 mb-6">To capture moments, please allow camera access.</p>
+          {cameraState === 'loading' ? (
+            <>
+              <p className="mb-4">Initializing camera...</p>
+              <div className="bg-gray-800 rounded-lg p-4 mb-4 max-h-40 overflow-y-auto text-left">
+                {debugInfo.map((info, i) => (
+                  <div key={i} className="text-xs text-gray-300 mb-1">{info}</div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-medium mb-2">Camera Access Required</h3>
+              <p className="text-white/80 mb-6">Click below to enable camera access</p>
+            </>
+          )}
+          
           <Button 
-            onClick={startCamera}
-            className="bg-white text-black hover:bg-white/90"
+            onClick={initCamera}
+            disabled={cameraState === 'loading'}
+            className="bg-white text-black hover:bg-white/90 w-full mb-4"
           >
-            Enable Camera
+            {cameraState === 'loading' ? 'Requesting Access...' : 'Enable Camera'}
           </Button>
+
+          <div className="text-xs text-white/60 text-left space-y-2">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold mb-1">Troubleshooting:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Allow camera permission in browser prompt</li>
+                  <li>Check browser settings for camera permissions</li>
+                  <li>Make sure no other app is using the camera</li>
+                  <li>Try a different browser (Chrome/Firefox/Safari)</li>
+                  <li>Use HTTPS connection (not HTTP)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // If image is captured, show goal tagging interface
-  if (capturedImage) {
+  if (cameraState === 'error') {
     return (
-      <div className="h-screen bg-black relative overflow-hidden">
-        {/* Captured image */}
-        <img 
-          src={capturedImage} 
-          alt="Captured" 
-          className="w-full h-full object-cover"
-        />
-        
-        {/* Goal tagging interface */}
-        <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-6 pb-32">
-          <p className="text-white text-center mb-4 font-medium">Tag this moment to a goal</p>
-          <div className="flex items-center justify-center gap-4">
-            <GoalButton goalIndex={0} onClick={() => handleGoalTag(0)} />
-            <GoalButton goalIndex={1} onClick={() => handleGoalTag(1)} />
-            <GoalButton goalIndex={2} onClick={() => handleGoalTag(2)} />
+      <div className="h-screen bg-black flex items-center justify-center p-6">
+        <div className="text-white text-center max-w-md">
+          <Camera className="h-16 w-16 mx-auto mb-4 text-red-400" />
+          <h3 className="text-xl font-medium mb-2">Camera Access Failed</h3>
+          <p className="text-white/80 mb-2">Unable to access camera</p>
+          
+          <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-4 mb-4">
+            <p className="text-sm text-red-200 font-mono">{errorMessage}</p>
           </div>
-          <Button
-            onClick={() => setCapturedImage(null)}
-            variant="ghost"
-            className="text-white hover:bg-white/20 mt-4 mx-auto block"
+
+          <div className="bg-gray-800 rounded-lg p-4 mb-4 max-h-60 overflow-y-auto text-left">
+            <p className="text-xs font-semibold mb-2">Debug Log:</p>
+            {debugInfo.map((info, i) => (
+              <div key={i} className="text-xs text-gray-300 mb-1">{info}</div>
+            ))}
+          </div>
+          
+          <Button 
+            onClick={initCamera}
+            className="bg-white text-black hover:bg-white/90 w-full"
           >
-            Cancel
+            Try Again
           </Button>
         </div>
       </div>
@@ -236,37 +238,52 @@ const CameraView = ({ onOpenChat, onOpenNotes, onOpenGoals }: CameraViewProps) =
       />
       <canvas ref={canvasRef} className="hidden" />
 
+      {/* Top header */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/50 to-transparent">
+        <div className="flex items-center justify-between p-4 pt-12">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+            <Menu className="h-6 w-6" />
+          </Button>
+          <h1 className="text-white font-medium text-lg">My Space</h1>
+          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+            <MoreHorizontal className="h-6 w-6" />
+          </Button>
+        </div>
+      </div>
+
       {/* Camera controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
         <div className="flex items-center justify-between p-6 pb-32 px-8">
-          {/* Goal buttons on the left - 50% space */}
-          <div className="flex items-center gap-3 flex-1 justify-start">
+          {/* Goal buttons on the left */}
+          <div className="flex items-center gap-2">
             <GoalButton goalIndex={0} />
             <GoalButton goalIndex={1} />
             <GoalButton goalIndex={2} />
           </div>
 
-          {/* Capture button - centered */}
+          {/* Capture button */}
           <button
             onClick={capturePhoto}
-            className="w-16 h-16 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95 flex-shrink-0"
-          />
+            className="w-20 h-20 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95"
+          >
+            <div className="w-full h-full rounded-full bg-white shadow-lg" />
+          </button>
 
-          {/* Goal page and Notes buttons on the right - 50% space */}
-          <div className="flex items-center gap-3 flex-1 justify-end">
+          {/* Chat and Notes buttons on the right */}
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => onOpenGoals?.()}
-              className="text-white hover:bg-white/20 rounded-full w-14 h-14 flex-shrink-0"
+              onClick={() => onOpenChat?.()}
+              className="text-white hover:bg-white/20 rounded-full w-12 h-12"
             >
-              <Target className="h-6 w-6" />
+              <MessageCircle className="h-6 w-6" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onOpenNotes?.()}
-              className="text-white hover:bg-white/20 rounded-full w-14 h-14 flex-shrink-0"
+              className="text-white hover:bg-white/20 rounded-full w-12 h-12"
             >
               <PenTool className="h-6 w-6" />
             </Button>
