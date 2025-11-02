@@ -136,7 +136,7 @@ const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
     }
   };
 
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (!videoRef.current || !canvasRef.current) return;
     
     const video = videoRef.current;
@@ -148,11 +148,48 @@ const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0);
-      const dataUrl = canvas.toDataURL('image/png');
-      setCapturedImage(dataUrl);
-      setTaggingMode(false);
-      addDebug('📸 Photo captured!');
+      
+      // Convert canvas to blob for storage
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const dataUrl = canvas.toDataURL('image/png');
+          setCapturedImage(dataUrl);
+          setTaggingMode(false);
+          
+          // Store in IndexedDB
+          try {
+            const db = await openDB();
+            const timestamp = Date.now();
+            const tx = db.transaction('photos', 'readwrite');
+            await tx.objectStore('photos').add({
+              id: timestamp,
+              blob: blob,
+              timestamp: timestamp
+            });
+            addDebug('📸 Photo captured and stored!');
+          } catch (err) {
+            console.error('Failed to store photo:', err);
+            addDebug('📸 Photo captured (storage failed)');
+          }
+        }
+      }, 'image/png');
     }
+  };
+
+  const openDB = (): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('BestiePhotos', 1);
+      
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result);
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('photos')) {
+          db.createObjectStore('photos', { keyPath: 'id' });
+        }
+      };
+    });
   };
 
   const handleTag = (goalIndex: number) => {
@@ -290,27 +327,31 @@ const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
               </div>
             )}
 
-            {/* Notes button */}
-            <button
-              onClick={onOpenNotes}
-              className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
-            >
-              <StickyNote className="h-6 w-6 text-white" />
-            </button>
-
-            {/* Capture button centered */}
+            {/* Capture button on the left */}
             <button
               onClick={capturePhoto}
               className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
             />
 
-            {/* Goal page button */}
-            <button
-              onClick={onOpenGoals}
-              className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
-            >
-              <ListChecks className="h-6 w-6 text-white" />
-            </button>
+            {/* Spacer to push buttons to the right */}
+            <div className="flex-1" />
+
+            {/* Notes and Goals buttons on the right */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onOpenNotes}
+                className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+              >
+                <StickyNote className="h-6 w-6 text-white" />
+              </button>
+
+              <button
+                onClick={onOpenGoals}
+                className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+              >
+                <ListChecks className="h-6 w-6 text-white" />
+              </button>
+            </div>
           </div>
         )}
       </div>
