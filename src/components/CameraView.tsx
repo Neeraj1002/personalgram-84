@@ -317,27 +317,15 @@ const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-center p-6 pb-32 gap-6">
-            {/* Goal buttons on the left (only if goals exist) */}
-            {mockGoals.length > 0 && (
-              <div className="flex items-center gap-2">
-                {mockGoals.map((_, idx) => (
-                  <GoalButton key={idx} goalIndex={idx} goals={mockGoals} />
-                ))}
-              </div>
-            )}
-
-            {/* Capture button on the left */}
-            <button
-              onClick={capturePhoto}
-              className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
-            />
-
-            {/* Spacer to push buttons to the right */}
-            <div className="flex-1" />
-
-            {/* Notes and Goals buttons on the right */}
-            <div className="flex items-center gap-3">
+          <div className="grid grid-cols-3 items-center p-6 pb-32">
+            <div />
+            <div className="flex items-center justify-center">
+              <button
+                onClick={capturePhoto}
+                className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-3">
               <button
                 onClick={onOpenNotes}
                 className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
