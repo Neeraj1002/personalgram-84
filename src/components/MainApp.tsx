@@ -23,7 +23,7 @@ const MainApp = () => {
       case 'capture':
         return (
           <CameraView 
-            onOpenChat={() => setActiveTab('bestie')}
+            onOpenGoals={() => setActiveTab('memories')}
             onOpenNotes={() => setCurrentView('notes')}
           />
         );
@@ -32,7 +32,7 @@ const MainApp = () => {
       default:
         return (
           <CameraView 
-            onOpenChat={() => setActiveTab('bestie')}
+            onOpenGoals={() => setActiveTab('memories')}
             onOpenNotes={() => setCurrentView('notes')}
           />
         );
@@ -43,7 +43,7 @@ const MainApp = () => {
     <div className="relative">
       {renderActiveView()}
       {/* Only show bottom navigation on main views */}
-      {(currentView === 'main' && activeTab !== 'bestie') && (
+      {currentView === 'main' && (
         <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       )}
     </div>

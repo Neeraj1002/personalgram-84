@@ -1,23 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Target, AlertCircle, Tag } from 'lucide-react';
+import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks } from 'lucide-react';
 
 interface CameraViewProps {
-  onOpenChat?: () => void;
   onOpenNotes?: () => void;
+  onOpenGoals?: () => void;
 }
 
 // Goal button component with streak indicators
-const GoalButton = ({ goalIndex, onClick }: { goalIndex: number, onClick?: () => void }) => {
-  const mockGoals = [
-    { name: 'Exercise', streak: 3, frequency: 'daily', lastCompleted: new Date().toISOString() },
-    { name: 'Read', streak: 0, frequency: 'daily', lastCompleted: null },
-    { name: 'Meditate', streak: 5, frequency: 'daily', lastCompleted: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() }
-  ];
-
-  const goal = mockGoals[goalIndex];
+const GoalButton = ({ goalIndex, onClick, goals }: { goalIndex: number, onClick?: () => void, goals: any[] }) => {
+  const goal = goals[goalIndex];
   if (!goal) {
-    return <div className="w-12 h-12" />;
+    return null;
   }
 
   const hasStreak = goal.streak > 0;
@@ -37,7 +31,7 @@ const GoalButton = ({ goalIndex, onClick }: { goalIndex: number, onClick?: () =>
   );
 };
 
-const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
+const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -46,6 +40,12 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [taggingMode, setTaggingMode] = useState(false);
+  
+  // TODO: Replace with actual goals from database
+  const mockGoals = [
+    // { name: 'Exercise', streak: 3, frequency: 'daily', lastCompleted: new Date().toISOString() },
+    // Uncomment above to see goals
+  ];
 
   const addDebug = (msg: string) => {
     console.log(msg);
@@ -261,13 +261,13 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
         {capturedImage ? (
           <div className="flex items-center justify-center p-6 pb-32">
-            {taggingMode ? (
+            {taggingMode && mockGoals.length > 0 ? (
               <div className="flex items-center gap-3">
-                <GoalButton goalIndex={0} onClick={() => handleTag(0)} />
-                <GoalButton goalIndex={1} onClick={() => handleTag(1)} />
-                <GoalButton goalIndex={2} onClick={() => handleTag(2)} />
+                {mockGoals.map((_, idx) => (
+                  <GoalButton key={idx} goalIndex={idx} goals={mockGoals} onClick={() => handleTag(idx)} />
+                ))}
               </div>
-            ) : (
+            ) : mockGoals.length > 0 ? (
               <Button
                 onClick={() => setTaggingMode(true)}
                 className="rounded-full w-14 h-14 bg-white text-black hover:bg-white/90"
@@ -275,31 +275,42 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
               >
                 <Tag className="h-6 w-6" />
               </Button>
+            ) : (
+              <div className="text-white/60 text-sm">No goals yet</div>
             )}
           </div>
         ) : (
-          <div className="flex items-center justify-between p-6 pb-32 px-8">
-            {/* Goal buttons on the left */}
-            <div className="flex items-center gap-2">
-              <GoalButton goalIndex={0} />
-              <GoalButton goalIndex={1} />
-              <GoalButton goalIndex={2} />
-            </div>
+          <div className="flex items-center justify-center p-6 pb-32 gap-6">
+            {/* Goal buttons on the left (only if goals exist) */}
+            {mockGoals.length > 0 && (
+              <div className="flex items-center gap-2">
+                {mockGoals.map((_, idx) => (
+                  <GoalButton key={idx} goalIndex={idx} goals={mockGoals} />
+                ))}
+              </div>
+            )}
+
+            {/* Notes button */}
+            <button
+              onClick={onOpenNotes}
+              className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+            >
+              <StickyNote className="h-6 w-6 text-white" />
+            </button>
 
             {/* Capture button centered */}
             <button
               onClick={capturePhoto}
-              className="w-20 h-20 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95"
-            >
-              <div className="w-full h-full rounded-full bg-white shadow-lg" />
-            </button>
+              className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
+            />
 
-            {/* Spacer to balance layout */}
-            <div className="flex items-center gap-2 opacity-0">
-              <GoalButton goalIndex={0} />
-              <GoalButton goalIndex={1} />
-              <GoalButton goalIndex={2} />
-            </div>
+            {/* Goal page button */}
+            <button
+              onClick={onOpenGoals}
+              className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+            >
+              <ListChecks className="h-6 w-6 text-white" />
+            </button>
           </div>
         )}
       </div>
