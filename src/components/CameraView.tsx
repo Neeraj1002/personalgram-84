@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Menu, MoreHorizontal, MessageCircle, PenTool, Target, AlertCircle } from 'lucide-react';
+import { Camera, Target, AlertCircle, Tag } from 'lucide-react';
 
 interface CameraViewProps {
   onOpenChat?: () => void;
@@ -8,7 +8,7 @@ interface CameraViewProps {
 }
 
 // Goal button component with streak indicators
-const GoalButton = ({ goalIndex }: { goalIndex: number }) => {
+const GoalButton = ({ goalIndex, onClick }: { goalIndex: number, onClick?: () => void }) => {
   const mockGoals = [
     { name: 'Exercise', streak: 3, frequency: 'daily', lastCompleted: new Date().toISOString() },
     { name: 'Read', streak: 0, frequency: 'daily', lastCompleted: null },
@@ -25,10 +25,13 @@ const GoalButton = ({ goalIndex }: { goalIndex: number }) => {
     new Date().getTime() - new Date(goal.lastCompleted).getTime() > 24 * 60 * 60 * 1000;
 
   return (
-    <button className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm">
+    <button onClick={onClick} className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm">
       <Target className="h-6 w-6 text-white mx-auto" />
       <div className="absolute -top-1 -right-1 text-xs">
         {hasStreak ? '🔥' : isOverdue ? '⌛' : ''}
+      </div>
+      <div className="absolute -top-1 -left-1 text-[10px] bg-black/60 text-white rounded-full px-1.5 py-0.5 border border-white/30">
+        {goal.streak}
       </div>
     </button>
   );
@@ -41,6 +44,8 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
   const [cameraState, setCameraState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [taggingMode, setTaggingMode] = useState(false);
 
   const addDebug = (msg: string) => {
     console.log(msg);
@@ -143,8 +148,17 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(video, 0, 0);
+      const dataUrl = canvas.toDataURL('image/png');
+      setCapturedImage(dataUrl);
+      setTaggingMode(false);
       addDebug('📸 Photo captured!');
     }
+  };
+
+  const handleTag = (goalIndex: number) => {
+    addDebug(`🏷️ Tagged photo with goal index ${goalIndex}`);
+    setTaggingMode(false);
+    setCapturedImage(null);
   };
 
   if (cameraState === 'idle' || cameraState === 'loading') {
@@ -228,67 +242,66 @@ const CameraView = ({ onOpenChat, onOpenNotes }: CameraViewProps) => {
 
   return (
     <div className="h-screen bg-black relative overflow-hidden">
-      {/* Camera feed */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="w-full h-full object-cover"
-      />
+      {/* Camera feed or captured image */}
+      {capturedImage ? (
+        <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+      ) : (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
+      )}
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Top header */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/50 to-transparent">
-        <div className="flex items-center justify-between p-4 pt-12">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-            <Menu className="h-6 w-6" />
-          </Button>
-          <h1 className="text-white font-medium text-lg">My Space</h1>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-            <MoreHorizontal className="h-6 w-6" />
-          </Button>
-        </div>
-      </div>
 
-      {/* Camera controls */}
+      {/* Bottom controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-        <div className="flex items-center justify-between p-6 pb-32 px-8">
-          {/* Goal buttons on the left */}
-          <div className="flex items-center gap-2">
-            <GoalButton goalIndex={0} />
-            <GoalButton goalIndex={1} />
-            <GoalButton goalIndex={2} />
+        {capturedImage ? (
+          <div className="flex items-center justify-center p-6 pb-32">
+            {taggingMode ? (
+              <div className="flex items-center gap-3">
+                <GoalButton goalIndex={0} onClick={() => handleTag(0)} />
+                <GoalButton goalIndex={1} onClick={() => handleTag(1)} />
+                <GoalButton goalIndex={2} onClick={() => handleTag(2)} />
+              </div>
+            ) : (
+              <Button
+                onClick={() => setTaggingMode(true)}
+                className="rounded-full w-14 h-14 bg-white text-black hover:bg-white/90"
+                variant="ghost"
+              >
+                <Tag className="h-6 w-6" />
+              </Button>
+            )}
           </div>
+        ) : (
+          <div className="flex items-center justify-between p-6 pb-32 px-8">
+            {/* Goal buttons on the left */}
+            <div className="flex items-center gap-2">
+              <GoalButton goalIndex={0} />
+              <GoalButton goalIndex={1} />
+              <GoalButton goalIndex={2} />
+            </div>
 
-          {/* Capture button */}
-          <button
-            onClick={capturePhoto}
-            className="w-20 h-20 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95"
-          >
-            <div className="w-full h-full rounded-full bg-white shadow-lg" />
-          </button>
+            {/* Capture button centered */}
+            <button
+              onClick={capturePhoto}
+              className="w-20 h-20 rounded-full bg-white border-4 border-white/20 hover:scale-105 transition-transform active:scale-95"
+            >
+              <div className="w-full h-full rounded-full bg-white shadow-lg" />
+            </button>
 
-          {/* Chat and Notes buttons on the right */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenChat?.()}
-              className="text-white hover:bg-white/20 rounded-full w-12 h-12"
-            >
-              <MessageCircle className="h-6 w-6" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onOpenNotes?.()}
-              className="text-white hover:bg-white/20 rounded-full w-12 h-12"
-            >
-              <PenTool className="h-6 w-6" />
-            </Button>
+            {/* Spacer to balance layout */}
+            <div className="flex items-center gap-2 opacity-0">
+              <GoalButton goalIndex={0} />
+              <GoalButton goalIndex={1} />
+              <GoalButton goalIndex={2} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

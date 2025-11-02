@@ -25,11 +25,6 @@ const MainApp = () => {
           <CameraView 
             onOpenChat={() => setActiveTab('bestie')}
             onOpenNotes={() => setCurrentView('notes')}
-            onOpenGoals={() => {
-              // Open dashboard in notes view style
-              setCurrentView('main');
-              // We'll create a goals overlay view instead
-            }}
           />
         );
       case 'memories':
@@ -39,9 +34,6 @@ const MainApp = () => {
           <CameraView 
             onOpenChat={() => setActiveTab('bestie')}
             onOpenNotes={() => setCurrentView('notes')}
-            onOpenGoals={() => {
-              setCurrentView('main');
-            }}
           />
         );
     }
@@ -51,7 +43,7 @@ const MainApp = () => {
     <div className="relative">
       {renderActiveView()}
       {/* Only show bottom navigation on main views */}
-      {currentView === 'main' && (
+      {(currentView === 'main' && activeTab !== 'bestie') && (
         <BottomNavigation activeTab={activeTab} onTabChange={setActiveTab} />
       )}
     </div>
