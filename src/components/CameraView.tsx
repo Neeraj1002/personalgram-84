@@ -5,6 +5,7 @@ import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks } from 'lucide
 interface CameraViewProps {
   onOpenNotes?: () => void;
   onOpenGoals?: () => void;
+  onSaveMemory?: () => void;
 }
 
 // Goal button component with streak indicators
@@ -31,7 +32,7 @@ const GoalButton = ({ goalIndex, onClick, goals }: { goalIndex: number, onClick?
   );
 };
 
-const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
+const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -198,6 +199,17 @@ const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
     setCapturedImage(null);
   };
 
+  const handleSave = () => {
+    addDebug('💾 Saving photo to memories');
+    setCapturedImage(null);
+    onSaveMemory?.();
+  };
+
+  const handleClose = () => {
+    addDebug('❌ Discarding photo');
+    setCapturedImage(null);
+  };
+
   if (cameraState === 'idle' || cameraState === 'loading') {
     return (
       <div className="h-screen bg-black flex items-center justify-center p-6">
@@ -297,23 +309,41 @@ const CameraView = ({ onOpenNotes, onOpenGoals }: CameraViewProps) => {
       {/* Bottom controls */}
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
         {capturedImage ? (
-          <div className="flex items-center justify-center p-6 pb-32">
-            {taggingMode && mockGoals.length > 0 ? (
-              <div className="flex items-center gap-3">
-                {mockGoals.map((_, idx) => (
-                  <GoalButton key={idx} goalIndex={idx} goals={mockGoals} onClick={() => handleTag(idx)} />
-                ))}
-              </div>
-            ) : mockGoals.length > 0 ? (
+          <div className="flex flex-col items-center gap-4 p-6 pb-32">
+            {/* Save and Close buttons */}
+            <div className="flex items-center gap-4">
               <Button
-                onClick={() => setTaggingMode(true)}
-                className="rounded-full w-14 h-14 bg-white text-black hover:bg-white/90"
+                onClick={handleClose}
+                className="rounded-full px-8 py-6 bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 backdrop-blur-sm"
                 variant="ghost"
               >
-                <Tag className="h-6 w-6" />
+                Close
               </Button>
-            ) : (
-              <div className="text-white/60 text-sm">No goals yet</div>
+              <Button
+                onClick={handleSave}
+                className="rounded-full px-8 py-6 bg-white text-black hover:bg-white/90"
+              >
+                Save
+              </Button>
+            </div>
+            
+            {/* Optional tag button for goals */}
+            {mockGoals.length > 0 && (
+              <div className="flex items-center gap-3">
+                {taggingMode ? (
+                  mockGoals.map((_, idx) => (
+                    <GoalButton key={idx} goalIndex={idx} goals={mockGoals} onClick={() => handleTag(idx)} />
+                  ))
+                ) : (
+                  <Button
+                    onClick={() => setTaggingMode(true)}
+                    className="rounded-full w-12 h-12 bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 backdrop-blur-sm"
+                    variant="ghost"
+                  >
+                    <Tag className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         ) : (

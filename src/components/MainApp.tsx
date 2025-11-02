@@ -25,6 +25,7 @@ const MainApp = () => {
           <CameraView 
             onOpenGoals={() => setActiveTab('memories')}
             onOpenNotes={() => setCurrentView('notes')}
+            onSaveMemory={() => setActiveTab('memories')}
           />
         );
       case 'memories':
@@ -34,6 +35,7 @@ const MainApp = () => {
           <CameraView 
             onOpenGoals={() => setActiveTab('memories')}
             onOpenNotes={() => setCurrentView('notes')}
+            onSaveMemory={() => setActiveTab('memories')}
           />
         );
     }
