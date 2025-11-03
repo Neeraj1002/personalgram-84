@@ -1,12 +1,58 @@
 import { Button } from '@/components/ui/button';
+<<<<<<< HEAD
 import { MessageCircle, Camera, Heart } from 'lucide-react';
+=======
+import { MessageCircle, Camera, Heart, Save, Tag } from 'lucide-react';
+>>>>>>> a610e614c7e50fef34451548037d0c02a94ad4b7
 
 interface BottomNavigationProps {
   activeTab: 'bestie' | 'capture' | 'memories';
   onTabChange: (tab: 'bestie' | 'capture' | 'memories') => void;
+<<<<<<< HEAD
 }
 
 const BottomNavigation = ({ activeTab, onTabChange }: BottomNavigationProps) => {
+=======
+  capturedImage?: { dataUrl: string; blob: Blob } | null;
+  onSaveCapture?: () => void;
+  onTagCapture?: () => void;
+  onCloseCapture?: () => void;
+}
+
+const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture, onTagCapture }: BottomNavigationProps) => {
+  // Show Save and Tag buttons when image is captured
+  if (capturedImage) {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-t border-white/10">
+        <div className="flex items-center justify-around py-2 px-4 safe-area-pb">
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={onSaveCapture}
+            className="flex flex-col items-center gap-1 h-auto py-3 px-6 text-white hover:text-white"
+          >
+            <Save className="h-6 w-6" />
+            <span className="text-xs">Save</span>
+          </Button>
+
+          <div className="w-20" />
+
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={onTagCapture}
+            className="flex flex-col items-center gap-1 h-auto py-3 px-6 text-white hover:text-white"
+          >
+            <Tag className="h-6 w-6" />
+            <span className="text-xs">Tag</span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Normal navigation
+>>>>>>> a610e614c7e50fef34451548037d0c02a94ad4b7
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-t border-white/10">
       <div className="flex items-center justify-around py-2 px-4 safe-area-pb">
