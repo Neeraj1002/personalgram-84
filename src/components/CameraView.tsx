@@ -6,6 +6,8 @@ interface CameraViewProps {
   onOpenNotes?: () => void;
   onOpenGoals?: () => void;
   onSaveMemory?: () => void;
+  onCapture?: (image: { dataUrl: string; blob: Blob }) => void;
+  onCloseCapture?: () => void;
 }
 
 // Goal button component with streak indicators
@@ -32,7 +34,7 @@ const GoalButton = ({ goalIndex, onClick, goals }: { goalIndex: number, onClick?
   );
 };
 
-const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps) => {
+const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onCloseCapture }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -158,7 +160,7 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
     if (ctx) {
       ctx.drawImage(video, 0, 0);
       
-      // Convert canvas to blob and data URL - but DON'T save yet
+      // Convert canvas to blob and data URL
       canvas.toBlob((blob) => {
         if (blob) {
           const dataUrl = canvas.toDataURL('image/png');
@@ -166,6 +168,9 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
           setCapturedBlob(blob);
           setTaggingMode(false);
           addDebug('📸 Photo captured!');
+          
+          // Notify parent component
+          onCapture?.({ dataUrl, blob });
         }
       }, 'image/png');
     }
@@ -224,6 +229,7 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
     addDebug('❌ Discarding photo');
     setCapturedImage(null);
     setCapturedBlob(null);
+    onCloseCapture?.();
   };
 
   if (cameraState === 'loading') {
@@ -308,24 +314,7 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
       )}
 
       {/* Bottom controls */}
-      {capturedImage ? (
-        /* Save and Tag buttons at bottom when photo is captured */
-        <div className="absolute bottom-0 left-0 right-0 z-10 p-6 pb-32 flex items-end justify-between">
-          <button
-            onClick={handleSave}
-            className="w-16 h-16 rounded-full bg-white text-black hover:bg-white/90 transition-all shadow-lg flex items-center justify-center"
-          >
-            <Save className="h-7 w-7" />
-          </button>
-          
-          <button
-            onClick={() => setTaggingMode(!taggingMode)}
-            className="w-16 h-16 rounded-full bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
-          >
-            <Tag className="h-7 w-7" />
-          </button>
-        </div>
-      ) : (
+      {!capturedImage && (
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
           <div className="grid grid-cols-3 items-center p-6 pb-32">
