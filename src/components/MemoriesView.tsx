@@ -11,10 +11,22 @@ const MemoriesView = () => {
 
   const loadPhotos = async () => {
     try {
-      const request = indexedDB.open('BestiePhotos', 1);
+      const request = indexedDB.open('BestiePhotos', 2);
+      
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (db.objectStoreNames.contains('photos')) {
+          db.deleteObjectStore('photos');
+        }
+        db.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
+      };
       
       request.onsuccess = () => {
         const db = request.result;
+        if (!db.objectStoreNames.contains('photos')) {
+          console.log('Photos store not found');
+          return;
+        }
         const tx = db.transaction('photos', 'readonly');
         const store = tx.objectStore('photos');
         const getAllRequest = store.getAll();

@@ -58,14 +58,15 @@ const MainApp = () => {
             // Save to IndexedDB
             const openDB = (): Promise<IDBDatabase> => {
               return new Promise((resolve, reject) => {
-                const request = indexedDB.open('BestiePhotos', 1);
+                const request = indexedDB.open('BestiePhotos', 2);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
                 request.onupgradeneeded = (event) => {
                   const db = (event.target as IDBOpenDBRequest).result;
-                  if (!db.objectStoreNames.contains('photos')) {
-                    db.createObjectStore('photos', { keyPath: 'id' });
+                  if (db.objectStoreNames.contains('photos')) {
+                    db.deleteObjectStore('photos');
                   }
+                  db.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
                 };
               });
             };

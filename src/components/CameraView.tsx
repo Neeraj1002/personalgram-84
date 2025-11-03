@@ -182,16 +182,17 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
 
   const openDB = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('BestiePhotos', 1);
+      const request = indexedDB.open('BestiePhotos', 2);
       
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
       
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains('photos')) {
-          db.createObjectStore('photos', { keyPath: 'id' });
+        if (db.objectStoreNames.contains('photos')) {
+          db.deleteObjectStore('photos');
         }
+        db.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
       };
     });
   };
@@ -230,6 +231,10 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
     setCapturedImage(null);
     setCapturedBlob(null);
     onCloseCapture?.();
+    // Ensure camera continues running
+    if (!streamRef.current && videoRef.current) {
+      initCamera();
+    }
   };
 
   if (cameraState === 'loading') {
