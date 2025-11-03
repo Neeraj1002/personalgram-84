@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks } from 'lucide-react';
+import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks, SwitchCamera, X, Save } from 'lucide-react';
 
 interface CameraViewProps {
   onOpenNotes?: () => void;
@@ -40,7 +40,15 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
   const [errorMessage, setErrorMessage] = useState('');
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [taggingMode, setTaggingMode] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  
+  // Auto-initialize camera on mount
+  useEffect(() => {
+    initCamera();
+    return () => stopCamera();
+  }, [facingMode]);
   
   // TODO: Replace with actual goals from database
   const mockGoals = [
@@ -79,9 +87,9 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
 
       addDebug('📱 Requesting camera access...');
       
-      // Request camera access with simpler constraints
+      // Request camera access with facingMode
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: { facingMode },
         audio: false
       });
 
@@ -150,31 +158,21 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
     if (ctx) {
       ctx.drawImage(video, 0, 0);
       
-      // Convert canvas to blob for storage
-      canvas.toBlob(async (blob) => {
+      // Convert canvas to blob and data URL - but DON'T save yet
+      canvas.toBlob((blob) => {
         if (blob) {
           const dataUrl = canvas.toDataURL('image/png');
           setCapturedImage(dataUrl);
+          setCapturedBlob(blob);
           setTaggingMode(false);
-          
-          // Store in IndexedDB
-          try {
-            const db = await openDB();
-            const timestamp = Date.now();
-            const tx = db.transaction('photos', 'readwrite');
-            await tx.objectStore('photos').add({
-              id: timestamp,
-              blob: blob,
-              timestamp: timestamp
-            });
-            addDebug('📸 Photo captured and stored!');
-          } catch (err) {
-            console.error('Failed to store photo:', err);
-            addDebug('📸 Photo captured (storage failed)');
-          }
+          addDebug('📸 Photo captured!');
         }
       }, 'image/png');
     }
+  };
+  
+  const flipCamera = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
   const openDB = (): Promise<IDBDatabase> => {
@@ -199,60 +197,45 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
     setCapturedImage(null);
   };
 
-  const handleSave = () => {
-    addDebug('💾 Saving photo to memories');
-    setCapturedImage(null);
-    onSaveMemory?.();
+  const handleSave = async () => {
+    if (!capturedBlob) return;
+    
+    // NOW save to IndexedDB
+    try {
+      const db = await openDB();
+      const timestamp = Date.now();
+      const tx = db.transaction('photos', 'readwrite');
+      await tx.objectStore('photos').add({
+        id: timestamp,
+        blob: capturedBlob,
+        timestamp: timestamp
+      });
+      addDebug('💾 Photo saved to memories!');
+      setCapturedImage(null);
+      setCapturedBlob(null);
+      onSaveMemory?.();
+    } catch (err) {
+      console.error('Failed to save photo:', err);
+      addDebug('❌ Save failed');
+    }
   };
 
   const handleClose = () => {
     addDebug('❌ Discarding photo');
     setCapturedImage(null);
+    setCapturedBlob(null);
   };
 
-  if (cameraState === 'idle' || cameraState === 'loading') {
+  if (cameraState === 'loading') {
     return (
       <div className="h-screen bg-black flex items-center justify-center p-6">
         <div className="text-white text-center max-w-md">
           <Camera className="h-12 w-12 mx-auto mb-4 animate-pulse" />
-          {cameraState === 'loading' ? (
-            <>
-              <p className="mb-4">Initializing camera...</p>
-              <div className="bg-gray-800 rounded-lg p-4 mb-4 max-h-40 overflow-y-auto text-left">
-                {debugInfo.map((info, i) => (
-                  <div key={i} className="text-xs text-gray-300 mb-1">{info}</div>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <h3 className="text-xl font-medium mb-2">Camera Access Required</h3>
-              <p className="text-white/80 mb-6">Click below to enable camera access</p>
-            </>
-          )}
-          
-          <Button 
-            onClick={initCamera}
-            disabled={cameraState === 'loading'}
-            className="bg-white text-black hover:bg-white/90 w-full mb-4"
-          >
-            {cameraState === 'loading' ? 'Requesting Access...' : 'Enable Camera'}
-          </Button>
-
-          <div className="text-xs text-white/60 text-left space-y-2">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold mb-1">Troubleshooting:</p>
-                <ul className="list-disc list-inside space-y-1">
-                  <li>Allow camera permission in browser prompt</li>
-                  <li>Check browser settings for camera permissions</li>
-                  <li>Make sure no other app is using the camera</li>
-                  <li>Try a different browser (Chrome/Firefox/Safari)</li>
-                  <li>Use HTTPS connection (not HTTP)</li>
-                </ul>
-              </div>
-            </div>
+          <p className="mb-4">Initializing camera...</p>
+          <div className="bg-gray-800 rounded-lg p-4 mb-4 max-h-40 overflow-y-auto text-left">
+            {debugInfo.map((info, i) => (
+              <div key={i} className="text-xs text-gray-300 mb-1">{info}</div>
+            ))}
           </div>
         </div>
       </div>
@@ -305,48 +288,46 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
       )}
       <canvas ref={canvasRef} className="hidden" />
 
+      {/* Top controls */}
+      {capturedImage ? (
+        /* Close button at top left when photo is captured */
+        <button
+          onClick={handleClose}
+          className="absolute top-6 left-6 z-20 w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+        >
+          <X className="h-6 w-6 text-white" />
+        </button>
+      ) : (
+        /* Camera flip button at top right when camera is active */
+        <button
+          onClick={flipCamera}
+          className="absolute top-6 right-6 z-20 w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+        >
+          <SwitchCamera className="h-6 w-6 text-white" />
+        </button>
+      )}
 
       {/* Bottom controls */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-        {capturedImage ? (
-          <div className="flex flex-col items-center gap-4 p-6 pb-32">
-            {/* Save and Close buttons */}
-            <div className="flex items-center gap-4">
-              <Button
-                onClick={handleClose}
-                className="rounded-full px-8 py-6 bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 backdrop-blur-sm"
-                variant="ghost"
-              >
-                Close
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="rounded-full px-8 py-6 bg-white text-black hover:bg-white/90"
-              >
-                Save
-              </Button>
-            </div>
-            
-            {/* Optional tag button for goals */}
-            {mockGoals.length > 0 && (
-              <div className="flex items-center gap-3">
-                {taggingMode ? (
-                  mockGoals.map((_, idx) => (
-                    <GoalButton key={idx} goalIndex={idx} goals={mockGoals} onClick={() => handleTag(idx)} />
-                  ))
-                ) : (
-                  <Button
-                    onClick={() => setTaggingMode(true)}
-                    className="rounded-full w-12 h-12 bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 backdrop-blur-sm"
-                    variant="ghost"
-                  >
-                    <Tag className="h-5 w-5" />
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
+      {capturedImage ? (
+        /* Save and Tag buttons at bottom when photo is captured */
+        <div className="absolute bottom-0 left-0 right-0 z-10 p-6 pb-32 flex items-end justify-between">
+          <button
+            onClick={handleSave}
+            className="w-16 h-16 rounded-full bg-white text-black hover:bg-white/90 transition-all shadow-lg flex items-center justify-center"
+          >
+            <Save className="h-7 w-7" />
+          </button>
+          
+          <button
+            onClick={() => setTaggingMode(!taggingMode)}
+            className="w-16 h-16 rounded-full bg-white/20 text-white border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+          >
+            <Tag className="h-7 w-7" />
+          </button>
+        </div>
+      ) : (
+        /* Camera capture and utility buttons */
+        <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
           <div className="grid grid-cols-3 items-center p-6 pb-32">
             <div />
             <div className="flex items-center justify-center">
@@ -371,8 +352,8 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory }: CameraViewProps)
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
