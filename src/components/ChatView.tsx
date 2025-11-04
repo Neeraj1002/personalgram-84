@@ -52,11 +52,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </div>
 
       {/* Chat Area */}
-<<<<<<< HEAD
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-=======
-      <ScrollArea className="flex-1 p-4 pb-40" ref={scrollRef}>
->>>>>>> a610e614c7e50fef34451548037d0c02a94ad4b7
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
@@ -101,36 +97,21 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-<<<<<<< HEAD
       <div className="p-4 bg-white/50 backdrop-blur-md border-t border-gray-200/20">
-=======
-      <div className="p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 sticky bottom-24 z-40">
->>>>>>> a610e614c7e50fef34451548037d0c02a94ad4b7
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-<<<<<<< HEAD
             onKeyPress={handleKeyPress}
             placeholder="Say something..."
             disabled={isLoading}
             className="flex-1 rounded-full bg-white/70 border-gray-200/30"
-=======
-            onKeyDown={handleKeyPress}
-            placeholder="Say something..."
-            disabled={isLoading}
-            className="flex-1 rounded-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus-visible:ring-companion-green"
->>>>>>> a610e614c7e50fef34451548037d0c02a94ad4b7
           />
           <Button 
             size="icon" 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-<<<<<<< HEAD
             className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white"
-=======
-            className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white flex-shrink-0"
->>>>>>> a610e614c7e50fef34451548037d0c02a94ad4b7
           >
             <Send className="h-4 w-4" />
           </Button>
