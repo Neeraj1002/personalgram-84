@@ -6,12 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Goal } from '@/hooks/useGoals';
+import { Goal } from './Dashboard';
 
 interface AddGoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (goal: Omit<Goal, 'id' | 'streak' | 'completed_dates' | 'created_at' | 'updated_at' | 'user_id'>) => void;
+  onAdd: (goal: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt'>) => void;
 }
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
@@ -38,11 +38,8 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
     onAdd({
       title: title.trim(),
       description: description.trim() || undefined,
-      frequency: { 
-        type: selectedDays.length === 7 ? 'daily' : 'weekly',
-        days: selectedDays,
-        times: selectedDays.length === 7 ? 1 : selectedDays.length
-      },
+      frequency: selectedDays.length === 7 ? 'daily' : 'weekly',
+      selectedDays,
       duration: parseInt(duration)
     });
 

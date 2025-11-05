@@ -1,54 +1,117 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Target, Eye, Flame, Clock } from 'lucide-react';
+import { Plus, Target, PenTool, Calendar } from 'lucide-react';
 import { GoalCard } from './GoalCard';
+import { NoteCard } from './NoteCard';
 import { AddGoalDialog } from './AddGoalDialog';
-import { Goal, useGoals } from '@/hooks/useGoals';
-import GoalDetailView from './GoalDetailView';
-import { useGoalTimer } from '@/hooks/useGoalTimer';
-import { useNotifications } from '@/hooks/useNotifications';
+import { AddNoteDialog } from './AddNoteDialog';
+
+export interface Goal {
+  id: string;
+  title: string;
+  description?: string;
+  frequency: 'daily' | 'weekly';
+  selectedDays?: number[];
+  duration?: number;
+  streak: number;
+  lastCompleted?: Date;
+  completedDates: Date[];
+  createdAt: Date;
+}
+
+export interface Note {
+  id: string;
+  title: string;
+  content: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const Dashboard = () => {
-  const { goals, loading, addGoal, updateGoal, deleteGoal, completeGoal } = useGoals();
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'completed'>('all');
-  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
-  const notifications = useNotifications(goals);
 
-  if (selectedGoalId) {
-    return (
-      <GoalDetailView
-        goalId={selectedGoalId}
-        onBack={() => setSelectedGoalId(null)}
-      />
-    );
-  }
+  // Load data from localStorage on mount
+  useEffect(() => {
+    const savedGoals = localStorage.getItem('companion-goals');
+    
+    if (savedGoals) {
+      const parsedGoals = JSON.parse(savedGoals).map((goal: any) => ({
+        ...goal,
+        lastCompleted: goal.lastCompleted ? new Date(goal.lastCompleted) : undefined,
+        completedDates: goal.completedDates.map((date: string) => new Date(date)),
+        createdAt: new Date(goal.createdAt)
+      }));
+      setGoals(parsedGoals);
+    }
+  }, []);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem('companion-goals', JSON.stringify(goals));
+  }, [goals]);
+
+  const addGoal = (goalData: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt'>) => {
+    const newGoal: Goal = {
+      ...goalData,
+      id: crypto.randomUUID(),
+      streak: 0,
+      completedDates: [],
+      createdAt: new Date()
+    };
+    setGoals(prev => [newGoal, ...prev]);
+  };
+
+  const updateGoal = (goalId: string, updates: Partial<Goal>) => {
+    setGoals(prev => prev.map(goal => 
+      goal.id === goalId ? { ...goal, ...updates } : goal
+    ));
+  };
+
+  const deleteGoal = (goalId: string) => {
+    setGoals(prev => prev.filter(goal => goal.id !== goalId));
+  };
 
 
   const getFilteredGoals = () => {
     switch (activeFilter) {
       case 'active':
         return goals.filter(goal => {
-          const today = new Date().toISOString().split('T')[0];
-          if (goal.frequency.type === 'daily') {
-            return !goal.completed_dates.includes(today);
+          const today = new Date();
+          if (goal.frequency === 'daily') {
+            today.setHours(0, 0, 0, 0);
+            return !goal.completedDates.some(date => {
+              const completedDate = new Date(date);
+              completedDate.setHours(0, 0, 0, 0);
+              return completedDate.getTime() === today.getTime();
+            });
           }
-          const startOfWeek = new Date();
-          startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-          const weekStart = startOfWeek.toISOString().split('T')[0];
-          return !goal.completed_dates.some(date => date >= weekStart);
+          const startOfWeek = new Date(today);
+          startOfWeek.setDate(today.getDate() - today.getDay());
+          return !goal.completedDates.some(date => {
+            const completedDate = new Date(date);
+            return completedDate >= startOfWeek && completedDate <= today;
+          });
         });
       case 'completed':
         return goals.filter(goal => {
-          const today = new Date().toISOString().split('T')[0];
-          if (goal.frequency.type === 'daily') {
-            return goal.completed_dates.includes(today);
+          const today = new Date();
+          if (goal.frequency === 'daily') {
+            today.setHours(0, 0, 0, 0);
+            return goal.completedDates.some(date => {
+              const completedDate = new Date(date);
+              completedDate.setHours(0, 0, 0, 0);
+              return completedDate.getTime() === today.getTime();
+            });
           }
-          const startOfWeek = new Date();
-          startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-          const weekStart = startOfWeek.toISOString().split('T')[0];
-          return goal.completed_dates.some(date => date >= weekStart);
+          const startOfWeek = new Date(today);
+          startOfWeek.setDate(today.getDate() - today.getDay());
+          return goal.completedDates.some(date => {
+            const completedDate = new Date(date);
+            return completedDate >= startOfWeek && completedDate <= today;
+          });
         });
       default:
         return goals;
@@ -59,24 +122,31 @@ const Dashboard = () => {
     if (goals.length === 0) return 0;
     const totalPossibleCompletions = goals.reduce((sum, goal) => {
       const daysSinceCreated = Math.floor(
-        (new Date().getTime() - new Date(goal.created_at).getTime()) / (1000 * 60 * 60 * 24)
+        (new Date().getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24)
       );
-      return sum + (goal.frequency.type === 'daily' ? daysSinceCreated : Math.floor(daysSinceCreated / 7));
+      return sum + (goal.frequency === 'daily' ? daysSinceCreated : Math.floor(daysSinceCreated / 7));
     }, 0);
-    const totalCompletions = goals.reduce((sum, goal) => sum + goal.completed_dates.length, 0);
+    const totalCompletions = goals.reduce((sum, goal) => sum + goal.completedDates.length, 0);
     return totalPossibleCompletions > 0 ? Math.round((totalCompletions / totalPossibleCompletions) * 100) : 0;
   };
 
   const filteredGoals = getFilteredGoals();
   const activeGoalsCount = goals.filter(goal => {
-    const today = new Date().toISOString().split('T')[0];
-    if (goal.frequency.type === 'daily') {
-      return !goal.completed_dates.includes(today);
+    const today = new Date();
+    if (goal.frequency === 'daily') {
+      today.setHours(0, 0, 0, 0);
+      return !goal.completedDates.some(date => {
+        const completedDate = new Date(date);
+        completedDate.setHours(0, 0, 0, 0);
+        return completedDate.getTime() === today.getTime();
+      });
     }
-    const startOfWeek = new Date();
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const weekStart = startOfWeek.toISOString().split('T')[0];
-    return !goal.completed_dates.some(date => date >= weekStart);
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    return !goal.completedDates.some(date => {
+      const completedDate = new Date(date);
+      return completedDate >= startOfWeek && completedDate <= today;
+    });
   }).length;
 
   return (
@@ -158,51 +228,15 @@ const Dashboard = () => {
               <p className="text-sm mt-2">Create your first goal to get started!</p>
             </div>
           ) : (
-            filteredGoals.map(goal => {
-              const timerInfo = useGoalTimer(goal);
-              
-              return (
-                <div key={goal.id} className="relative">
-                  <GoalCard 
-                    goal={goal} 
-                    onUpdate={updateGoal}
-                    onDelete={deleteGoal}
-                    showStreak
-                  />
-                  
-                  {/* Status Indicators */}
-                  <div className="absolute top-2 right-20 flex items-center gap-1">
-                    {timerInfo.hasActiveStreak && (
-                      <div className="flex items-center gap-1 bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 px-2 py-1 rounded-full text-xs">
-                        <Flame className="h-3 w-3" />
-                        <span>{goal.streak}</span>
-                      </div>
-                    )}
-                    
-                    {timerInfo.isInDanger && (
-                      <div className="flex items-center gap-1 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 px-2 py-1 rounded-full text-xs">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          {goal.frequency.type === 'daily' 
-                            ? `${timerInfo.hoursUntilDeadline}h`
-                            : `${timerInfo.daysUntilWeekEnd}d`
-                          }
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSelectedGoalId(goal.id)}
-                    className="absolute top-2 right-2 h-8 w-8 bg-white/80 hover:bg-white"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </div>
-              );
-            })
+            filteredGoals.map(goal => (
+              <GoalCard 
+                key={goal.id} 
+                goal={goal} 
+                onUpdate={updateGoal}
+                onDelete={deleteGoal}
+                showStreak
+              />
+            ))
           )}
         </div>
 

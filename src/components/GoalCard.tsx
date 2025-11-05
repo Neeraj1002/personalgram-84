@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, MoreVertical, Edit, Trash2, Flame } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Goal } from '@/hooks/useGoals';
+import { Goal } from './Dashboard';
 
 interface GoalCardProps {
   goal: Goal;
@@ -19,26 +19,40 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
   const markCompleted = async () => {
     setIsCompleting(true);
     
-    const today = new Date().toISOString().split('T')[0];
-    const newCompletedDates = [...goal.completed_dates, today];
+    const today = new Date();
+    const newCompletedDates = [...goal.completedDates, today];
     
     let newStreak = goal.streak;
     
-    if (goal.frequency.type === 'daily') {
+    if (goal.frequency === 'daily') {
       // Check if completed yesterday
-      const yesterday = new Date();
+      const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      yesterday.setHours(0, 0, 0, 0);
       
-      const hasYesterday = goal.completed_dates.includes(yesterdayStr);
+      const hasYesterday = goal.completedDates.some(date => {
+        const completedDate = new Date(date);
+        completedDate.setHours(0, 0, 0, 0);
+        return completedDate.getTime() === yesterday.getTime();
+      });
+      
       newStreak = hasYesterday ? goal.streak + 1 : 1;
     } else {
       // Weekly goal
-      newStreak = goal.streak + 1;
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      
+      const hasLastWeek = goal.completedDates.some(date => {
+        const completedDate = new Date(date);
+        return completedDate >= lastWeek && completedDate < new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      });
+      
+      newStreak = hasLastWeek ? goal.streak + 1 : 1;
     }
     
     onUpdate(goal.id, {
-      completed_dates: newCompletedDates,
+      completedDates: newCompletedDates,
+      lastCompleted: today,
       streak: newStreak
     });
     
@@ -46,17 +60,24 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
   };
 
   const isCompletedToday = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    if (goal.frequency.type === 'daily') {
-      return goal.completed_dates.includes(today);
+    if (goal.frequency === 'daily') {
+      return goal.completedDates.some(date => {
+        const completedDate = new Date(date);
+        completedDate.setHours(0, 0, 0, 0);
+        return completedDate.getTime() === today.getTime();
+      });
     } else {
       // Weekly - check if completed this week
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-      const weekStart = startOfWeek.toISOString().split('T')[0];
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
       
-      return goal.completed_dates.some(date => date >= weekStart);
+      return goal.completedDates.some(date => {
+        const completedDate = new Date(date);
+        return completedDate >= startOfWeek && completedDate <= today;
+      });
     }
   };
 
@@ -96,7 +117,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
                 variant="secondary" 
                 className="bg-companion-cream-dark text-xs"
               >
-                {goal.frequency.type}
+                {goal.frequency}
               </Badge>
               
               <Button
