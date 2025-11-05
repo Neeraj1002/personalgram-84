@@ -24,31 +24,18 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
     
     let newStreak = goal.streak;
     
-    if (goal.frequency === 'daily') {
-      // Check if completed yesterday
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      yesterday.setHours(0, 0, 0, 0);
-      
-      const hasYesterday = goal.completedDates.some(date => {
-        const completedDate = new Date(date);
-        completedDate.setHours(0, 0, 0, 0);
-        return completedDate.getTime() === yesterday.getTime();
-      });
-      
-      newStreak = hasYesterday ? goal.streak + 1 : 1;
-    } else {
-      // Weekly goal
-      const lastWeek = new Date(today);
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      
-      const hasLastWeek = goal.completedDates.some(date => {
-        const completedDate = new Date(date);
-        return completedDate >= lastWeek && completedDate < new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-      });
-      
-      newStreak = hasLastWeek ? goal.streak + 1 : 1;
-    }
+    // Check if completed yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setHours(0, 0, 0, 0);
+    
+    const hasYesterday = goal.completedDates.some(date => {
+      const completedDate = new Date(date);
+      completedDate.setHours(0, 0, 0, 0);
+      return completedDate.getTime() === yesterday.getTime();
+    });
+    
+    newStreak = hasYesterday ? goal.streak + 1 : 1;
     
     onUpdate(goal.id, {
       completedDates: newCompletedDates,
@@ -63,25 +50,20 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    if (goal.frequency === 'daily') {
-      return goal.completedDates.some(date => {
-        const completedDate = new Date(date);
-        completedDate.setHours(0, 0, 0, 0);
-        return completedDate.getTime() === today.getTime();
-      });
-    } else {
-      // Weekly - check if completed this week
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay());
-      
-      return goal.completedDates.some(date => {
-        const completedDate = new Date(date);
-        return completedDate >= startOfWeek && completedDate <= today;
-      });
-    }
+    return goal.completedDates.some(date => {
+      const completedDate = new Date(date);
+      completedDate.setHours(0, 0, 0, 0);
+      return completedDate.getTime() === today.getTime();
+    });
+  };
+
+  const isActiveToday = () => {
+    const today = new Date().getDay();
+    return goal.selectedDays.includes(today);
   };
 
   const completed = isCompletedToday();
+  const activeToday = isActiveToday();
 
   return (
     <Card className={`transition-all duration-300 border-0 ${
@@ -117,19 +99,22 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
                 variant="secondary" 
                 className="bg-companion-cream-dark text-xs"
               >
-                {goal.frequency}
+                {goal.selectedDays.length === 7 ? 'Daily' : `${goal.selectedDays.length} days/week`}
               </Badge>
               
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={markCompleted}
-                disabled={completed || isCompleting}
+                disabled={completed || isCompleting || !activeToday}
                 className={`h-8 w-8 rounded-full transition-all ${
                   completed 
                     ? 'bg-companion-green text-white' 
+                    : !activeToday
+                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
                     : 'hover:bg-companion-green-light hover:text-companion-green-dark'
                 }`}
+                title={!activeToday ? 'Not scheduled for today' : completed ? 'Completed' : 'Mark as complete'}
               >
                 <Check className={`h-4 w-4 ${isCompleting ? 'animate-bounce' : ''}`} />
               </Button>

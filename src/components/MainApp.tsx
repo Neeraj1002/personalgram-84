@@ -8,13 +8,17 @@ import BottomNavigation from './BottomNavigation';
 
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState<'bestie' | 'capture' | 'memories'>('capture');
-  const [currentView, setCurrentView] = useState<'main' | 'notes'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'notes' | 'goals'>('main');
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
 
   const renderActiveView = () => {
     // Handle overlay views first
     if (currentView === 'notes') {
       return <NotesView onBack={() => setCurrentView('main')} />;
+    }
+
+    if (currentView === 'goals') {
+      return <Dashboard onBack={() => setCurrentView('main')} />;
     }
 
     // Handle main tab views
@@ -24,7 +28,7 @@ const MainApp = () => {
       case 'capture':
         return (
           <CameraView 
-            onOpenGoals={() => setActiveTab('memories')}
+            onOpenGoals={() => setCurrentView('goals')}
             onOpenNotes={() => setCurrentView('notes')}
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
@@ -36,7 +40,7 @@ const MainApp = () => {
       default:
         return (
           <CameraView 
-            onOpenGoals={() => setActiveTab('memories')}
+            onOpenGoals={() => setCurrentView('goals')}
             onOpenNotes={() => setCurrentView('notes')}
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}

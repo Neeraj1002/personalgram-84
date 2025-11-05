@@ -11,7 +11,7 @@ import { Goal } from './Dashboard';
 interface AddGoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (goal: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt'>) => void;
+  onAdd: (goal: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt' | 'isActive'>) => void;
 }
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;
@@ -33,12 +33,14 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || selectedDays.length === 0) return;
+    if (!title.trim() || selectedDays.length < 3) {
+      alert('Please fill in the title and select at least 3 days');
+      return;
+    }
 
     onAdd({
       title: title.trim(),
       description: description.trim() || undefined,
-      frequency: selectedDays.length === 7 ? 'daily' : 'weekly',
       selectedDays,
       duration: parseInt(duration)
     });
@@ -109,9 +111,9 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
                 </Button>
               ))}
             </div>
-            {selectedDays.length === 0 && (
-              <p className="text-sm text-muted-foreground">Please select at least one day</p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              Please select at least 3 days {selectedDays.length > 0 && `(${selectedDays.length} selected)`}
+            </p>
           </div>
 
           <div className="space-y-2">
