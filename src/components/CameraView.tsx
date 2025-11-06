@@ -287,14 +287,14 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
     <div className="h-screen bg-black relative overflow-hidden">
       {/* Camera feed or captured image */}
       {capturedImage ? (
-        <img src={capturedImage} alt="Captured" className="w-full h-full object-cover" />
+        <img src={capturedImage} alt="Captured" className="w-full h-full object-contain bg-black" />
       ) : (
         <video
           ref={videoRef}
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain bg-black"
         />
       )}
       <canvas ref={canvasRef} className="hidden" />

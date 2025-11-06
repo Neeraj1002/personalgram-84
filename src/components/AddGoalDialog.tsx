@@ -11,7 +11,7 @@ import { Goal } from './Dashboard';
 interface AddGoalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (goal: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt' | 'isActive'>) => void;
+  onAdd: (goal: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt' | 'isActive' | 'state'>) => void;
 }
 
 const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'] as const;

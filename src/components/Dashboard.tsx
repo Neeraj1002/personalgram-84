@@ -18,6 +18,7 @@ export interface Goal {
   completedDates: Date[];
   createdAt: Date;
   isActive: boolean;
+  state: 'active' | 'inactive' | 'completed';
 }
 
 export interface Note {
@@ -37,9 +38,28 @@ const Dashboard = ({ onBack }: DashboardProps) => {
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'completed'>('all');
 
+  const calculateGoalState = (goal: Goal): 'active' | 'inactive' | 'completed' => {
+    const daysSinceCreated = Math.floor(
+      (new Date().getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    
+    const requiredCompletions = Math.floor((goal.duration / 7) * goal.selectedDays.length);
+    const currentCompletions = goal.completedDates.length;
+    
+    if (currentCompletions >= requiredCompletions) {
+      return 'completed';
+    }
+    
+    if (daysSinceCreated >= goal.duration) {
+      return 'inactive';
+    }
+    
+    return 'active';
+  };
+
   // Load data from localStorage on mount
   useEffect(() => {
-    const savedGoals = localStorage.getItem('companion-goals');
+    const savedGoals = localStorage.getItem('bestie-goals');
     
     if (savedGoals) {
       const parsedGoals = JSON.parse(savedGoals).map((goal: any) => ({
@@ -52,12 +72,16 @@ const Dashboard = ({ onBack }: DashboardProps) => {
     }
   }, []);
 
-  // Save to localStorage whenever data changes
+  // Update goal states and save to localStorage whenever data changes
   useEffect(() => {
-    localStorage.setItem('companion-goals', JSON.stringify(goals));
+    const updatedGoals = goals.map(goal => ({
+      ...goal,
+      state: calculateGoalState(goal)
+    }));
+    localStorage.setItem('bestie-goals', JSON.stringify(updatedGoals));
   }, [goals]);
 
-  const addGoal = (goalData: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt' | 'isActive'>) => {
+  const addGoal = (goalData: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt' | 'isActive' | 'state'>) => {
     const activeGoalsCount = goals.filter(g => g.isActive).length;
     if (activeGoalsCount >= 3) {
       return; // Don't add if already at limit
@@ -69,7 +93,8 @@ const Dashboard = ({ onBack }: DashboardProps) => {
       streak: 0,
       completedDates: [],
       createdAt: new Date(),
-      isActive: true
+      isActive: true,
+      state: 'active'
     };
     setGoals(prev => [newGoal, ...prev]);
   };
@@ -169,7 +194,19 @@ const Dashboard = ({ onBack }: DashboardProps) => {
       <div className="bg-card border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-semibold text-foreground">Goals Dashboard</h1>
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={onBack}
+                  className="text-foreground"
+                >
+                  ← Back
+                </Button>
+              )}
+              <h1 className="text-2xl font-semibold text-foreground">Goals Dashboard</h1>
+            </div>
             <Button 
               variant="ghost" 
               size="sm"

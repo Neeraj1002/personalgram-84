@@ -95,12 +95,26 @@ export const GoalCard = ({ goal, onUpdate, onDelete, showStreak = false }: GoalC
             )}
             
             <div className="flex items-center justify-between">
-              <Badge 
-                variant="secondary" 
-                className="bg-companion-cream-dark text-xs"
-              >
-                {goal.selectedDays.length === 7 ? 'Daily' : `${goal.selectedDays.length} days/week`}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge 
+                  variant="secondary" 
+                  className="bg-companion-cream-dark text-xs"
+                >
+                  {goal.selectedDays.length === 7 ? 'Daily' : `${goal.selectedDays.length} days/week`}
+                </Badge>
+                <Badge 
+                  variant="outline"
+                  className={`text-xs ${
+                    goal.state === 'completed' 
+                      ? 'bg-green-500/10 text-green-700 border-green-300' 
+                      : goal.state === 'inactive'
+                      ? 'bg-red-500/10 text-red-700 border-red-300'
+                      : 'bg-blue-500/10 text-blue-700 border-blue-300'
+                  }`}
+                >
+                  {goal.state.charAt(0).toUpperCase() + goal.state.slice(1)}
+                </Badge>
+              </div>
               
               <Button
                 variant="ghost"
