@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks, SwitchCamera, X, Save } from 'lucide-react';
+import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks, SwitchCamera, X, Save, Timer } from 'lucide-react';
 
 interface CameraViewProps {
   onOpenNotes?: () => void;
@@ -45,12 +45,40 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
   const [capturedBlob, setCapturedBlob] = useState<Blob | null>(null);
   const [taggingMode, setTaggingMode] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [hasOverdueGoals, setHasOverdueGoals] = useState(false);
   
   // Auto-initialize camera on mount
   useEffect(() => {
     initCamera();
+    checkOverdueGoals();
     return () => stopCamera();
   }, [facingMode]);
+
+  const checkOverdueGoals = () => {
+    const storedGoals = localStorage.getItem('bestie-goals');
+    if (storedGoals) {
+      const goals = JSON.parse(storedGoals);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayDay = today.getDay();
+      
+      const hasOverdue = goals.some((goal: any) => {
+        if (goal.state !== 'active') return false;
+        if (!goal.selectedDays.includes(todayDay)) return false;
+        
+        // Check if completed today
+        const completedToday = goal.completedDates.some((date: string) => {
+          const completedDate = new Date(date);
+          completedDate.setHours(0, 0, 0, 0);
+          return completedDate.getTime() === today.getTime();
+        });
+        
+        return !completedToday;
+      });
+      
+      setHasOverdueGoals(hasOverdue);
+    }
+  };
   
   // TODO: Replace with actual goals from database
   const mockGoals = [
@@ -323,7 +351,19 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
           <div className="grid grid-cols-3 items-center p-6 pb-32">
-            <div />
+            <div className="flex items-center justify-start">
+              <button
+                onClick={onOpenGoals}
+                className="relative w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+              >
+                <ListChecks className="h-6 w-6 text-white" />
+                {hasOverdueGoals && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-companion-peach flex items-center justify-center">
+                    <Timer className="h-3.5 w-3.5 text-white" />
+                  </div>
+                )}
+              </button>
+            </div>
             <div className="flex items-center justify-center">
               <button
                 onClick={capturePhoto}
@@ -336,13 +376,6 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
                 className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
               >
                 <StickyNote className="h-6 w-6 text-white" />
-              </button>
-
-              <button
-                onClick={onOpenGoals}
-                className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
-              >
-                <ListChecks className="h-6 w-6 text-white" />
               </button>
             </div>
           </div>

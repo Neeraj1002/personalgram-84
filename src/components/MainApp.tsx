@@ -55,13 +55,14 @@ const MainApp = () => {
   return (
     <div className="relative">
       {renderActiveView()}
-      {/* Only show BottomNavigation when in main tab views, not overlay views */}
-      {currentView === 'main' && (
-        <BottomNavigation 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab}
-          capturedImage={capturedImage}
-          onSaveCapture={() => {
+      <BottomNavigation 
+        activeTab={activeTab} 
+        onTabChange={(tab) => {
+          setCurrentView('main');
+          setActiveTab(tab);
+        }}
+        capturedImage={capturedImage}
+        onSaveCapture={() => {
             if (capturedImage) {
               // Save to IndexedDB
               const openDB = (): Promise<IDBDatabase> => {
@@ -98,12 +99,57 @@ const MainApp = () => {
           onTagCapture={() => setShowTagDialog(true)}
           onCloseCapture={() => setCapturedImage(null)}
         />
-      )}
+      )
       <TagGoalDialog 
         open={showTagDialog}
         onOpenChange={setShowTagDialog}
         onSelectGoal={(goalId) => {
           if (capturedImage) {
+            // Update goal streak
+            const storedGoals = localStorage.getItem('bestie-goals');
+            if (storedGoals) {
+              const goals = JSON.parse(storedGoals);
+              const goalIndex = goals.findIndex((g: any) => g.id === goalId);
+              
+              if (goalIndex !== -1) {
+                const goal = goals[goalIndex];
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                // Check if already completed today
+                const alreadyCompleted = goal.completedDates.some((date: string) => {
+                  const completedDate = new Date(date);
+                  completedDate.setHours(0, 0, 0, 0);
+                  return completedDate.getTime() === today.getTime();
+                });
+                
+                if (!alreadyCompleted) {
+                  const newCompletedDates = [...goal.completedDates, new Date()];
+                  
+                  // Check if completed yesterday for streak
+                  const yesterday = new Date(today);
+                  yesterday.setDate(yesterday.getDate() - 1);
+                  
+                  const hasYesterday = goal.completedDates.some((date: string) => {
+                    const completedDate = new Date(date);
+                    completedDate.setHours(0, 0, 0, 0);
+                    return completedDate.getTime() === yesterday.getTime();
+                  });
+                  
+                  const newStreak = hasYesterday ? goal.streak + 1 : 1;
+                  
+                  goals[goalIndex] = {
+                    ...goal,
+                    completedDates: newCompletedDates,
+                    lastCompleted: new Date(),
+                    streak: newStreak
+                  };
+                  
+                  localStorage.setItem('bestie-goals', JSON.stringify(goals));
+                }
+              }
+            }
+
             const openDB = (): Promise<IDBDatabase> => {
               return new Promise((resolve, reject) => {
                 const request = indexedDB.open('BestiePhotos', 2);
