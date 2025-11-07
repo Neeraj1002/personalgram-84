@@ -32,15 +32,15 @@ const GoalButton = ({ goal, onClick }: { goal: any, onClick?: () => void }) => {
   const showTimer = isOverdue;
 
   return (
-    <button onClick={onClick} className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center">
-      <Target className="h-6 w-6 text-white" />
+    <button onClick={onClick} className="relative w-10 h-10 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0">
+      <Target className="h-4 w-4 text-white" />
       {/* Left top - streak count */}
-      <div className="absolute -top-1 -left-1 text-[10px] bg-black/60 text-white rounded-full px-1.5 py-0.5 border border-white/30 min-w-[20px] text-center">
+      <div className="absolute -top-1 -left-1 text-[9px] bg-black/60 text-white rounded-full px-1 py-0.5 border border-white/30 min-w-[18px] text-center">
         {goal.streak || 0}
       </div>
       {/* Right top - fire or timer */}
       {(showFire || showTimer) && (
-        <div className="absolute -top-1 -right-1 text-xs">
+        <div className="absolute -top-0.5 -right-0.5 text-[10px]">
           {showFire ? '🔥' : showTimer ? '⌛' : ''}
         </div>
       )}
@@ -376,38 +376,37 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       {!capturedImage && (
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-between p-6 pb-32 px-8">
-            {/* Left side - Goal buttons */}
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-2 p-4 pb-32 px-4">
+            {/* Left side - Goal buttons (30-40% width) */}
+            <div className="flex items-center gap-2 flex-shrink-0 min-w-0" style={{ width: activeGoals.length > 0 ? '35%' : '0%' }}>
               {activeGoals.map((goal, index) => (
                 <GoalButton key={goal.id || index} goal={goal} onClick={() => {}} />
               ))}
             </div>
             
-            {/* Center - Capture button */}
-            <div className="flex items-center justify-center">
+            {/* Center & Right - Capture, Notes, Goals (60-70% width) */}
+            <div className="flex items-center gap-3 justify-end" style={{ width: activeGoals.length > 0 ? '65%' : '100%' }}>
+              {/* Center - Capture button */}
               <button
                 onClick={capturePhoto}
-                className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
+                className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0"
               />
-            </div>
-            
-            {/* Right side - Notes and Goals dashboard */}
-            <div className="flex items-center gap-3">
+              
+              {/* Right side - Notes and Goals dashboard */}
               <button
                 onClick={onOpenNotes}
-                className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+                className="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
               >
-                <StickyNote className="h-6 w-6 text-white" />
+                <StickyNote className="h-5 w-5 text-white" />
               </button>
               <button
                 onClick={onOpenGoals}
-                className="relative w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+                className="relative w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
               >
-                <ListChecks className="h-6 w-6 text-white" />
+                <ListChecks className="h-5 w-5 text-white" />
                 {hasOverdueGoals && (
-                  <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-companion-peach flex items-center justify-center">
-                    <Timer className="h-3.5 w-3.5 text-white" />
+                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-companion-peach flex items-center justify-center">
+                    <Timer className="h-3 w-3 text-white" />
                   </div>
                 )}
               </button>
