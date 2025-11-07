@@ -376,41 +376,40 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       {!capturedImage && (
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-between gap-2 p-4 pb-32 px-4">
-            {/* Left side - Goal buttons (30-40% width) */}
-            <div className="flex items-center gap-2 flex-shrink-0 min-w-0" style={{ width: activeGoals.length > 0 ? '35%' : '0%' }}>
-              {activeGoals.map((goal, index) => (
-                <GoalButton key={goal.id || index} goal={goal} onClick={() => {}} />
-              ))}
-            </div>
+          <div className="flex items-center justify-center gap-3 p-4 pb-32 px-4">
+            {/* Left side - Goal buttons immediately to the left of capture */}
+            {activeGoals.length > 0 && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {activeGoals.map((goal, index) => (
+                  <GoalButton key={goal.id || index} goal={goal} onClick={() => {}} />
+                ))}
+              </div>
+            )}
             
-            {/* Center & Right - Capture, Notes, Goals (60-70% width) */}
-            <div className="flex items-center gap-3 justify-end" style={{ width: activeGoals.length > 0 ? '65%' : '100%' }}>
-              {/* Center - Capture button */}
-              <button
-                onClick={capturePhoto}
-                className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0"
-              />
-              
-              {/* Right side - Notes and Goals dashboard */}
-              <button
-                onClick={onOpenNotes}
-                className="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-              >
-                <StickyNote className="h-5 w-5 text-white" />
-              </button>
-              <button
-                onClick={onOpenGoals}
-                className="relative w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-              >
-                <ListChecks className="h-5 w-5 text-white" />
-                {hasOverdueGoals && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-companion-peach flex items-center justify-center">
-                    <Timer className="h-3 w-3 text-white" />
-                  </div>
-                )}
-              </button>
-            </div>
+            {/* Center - Capture button */}
+            <button
+              onClick={capturePhoto}
+              className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0"
+            />
+            
+            {/* Right side - Notes and Goals dashboard */}
+            <button
+              onClick={onOpenNotes}
+              className="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
+            >
+              <StickyNote className="h-5 w-5 text-white" />
+            </button>
+            <button
+              onClick={onOpenGoals}
+              className="relative w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
+            >
+              <ListChecks className="h-5 w-5 text-white" />
+              {hasOverdueGoals && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-companion-peach flex items-center justify-center">
+                  <Timer className="h-3 w-3 text-white" />
+                </div>
+              )}
+            </button>
           </div>
         </div>
       )}
