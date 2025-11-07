@@ -11,25 +11,39 @@ interface CameraViewProps {
 }
 
 // Goal button component with streak indicators
-const GoalButton = ({ goalIndex, onClick, goals }: { goalIndex: number, onClick?: () => void, goals: any[] }) => {
-  const goal = goals[goalIndex];
-  if (!goal) {
-    return null;
-  }
-
+const GoalButton = ({ goal, onClick }: { goal: any, onClick?: () => void }) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayDay = today.getDay();
+  
+  // Check if this goal is scheduled for today
+  const isScheduledToday = goal.selectedDays.includes(todayDay);
+  
+  // Check if completed today
+  const completedToday = goal.completedDates?.some((date: string) => {
+    const completedDate = new Date(date);
+    completedDate.setHours(0, 0, 0, 0);
+    return completedDate.getTime() === today.getTime();
+  });
+  
   const hasStreak = goal.streak > 0;
-  const isOverdue = goal.frequency === 'daily' && goal.lastCompleted && 
-    new Date().getTime() - new Date(goal.lastCompleted).getTime() > 24 * 60 * 60 * 1000;
+  const isOverdue = isScheduledToday && !completedToday;
+  const showFire = hasStreak && completedToday;
+  const showTimer = isOverdue;
 
   return (
-    <button onClick={onClick} className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm">
-      <Target className="h-6 w-6 text-white mx-auto" />
-      <div className="absolute -top-1 -right-1 text-xs">
-        {hasStreak ? '🔥' : isOverdue ? '⌛' : ''}
+    <button onClick={onClick} className="relative w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center">
+      <Target className="h-6 w-6 text-white" />
+      {/* Left top - streak count */}
+      <div className="absolute -top-1 -left-1 text-[10px] bg-black/60 text-white rounded-full px-1.5 py-0.5 border border-white/30 min-w-[20px] text-center">
+        {goal.streak || 0}
       </div>
-      <div className="absolute -top-1 -left-1 text-[10px] bg-black/60 text-white rounded-full px-1.5 py-0.5 border border-white/30">
-        {goal.streak}
-      </div>
+      {/* Right top - fire or timer */}
+      {(showFire || showTimer) && (
+        <div className="absolute -top-1 -right-1 text-xs">
+          {showFire ? '🔥' : showTimer ? '⌛' : ''}
+        </div>
+      )}
     </button>
   );
 };
@@ -46,13 +60,24 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
   const [taggingMode, setTaggingMode] = useState(false);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [hasOverdueGoals, setHasOverdueGoals] = useState(false);
+  const [activeGoals, setActiveGoals] = useState<any[]>([]);
   
   // Auto-initialize camera on mount
   useEffect(() => {
     initCamera();
     checkOverdueGoals();
+    loadActiveGoals();
     return () => stopCamera();
   }, [facingMode]);
+
+  const loadActiveGoals = () => {
+    const storedGoals = localStorage.getItem('bestie-goals');
+    if (storedGoals) {
+      const goals = JSON.parse(storedGoals);
+      const active = goals.filter((goal: any) => goal.state === 'active').slice(0, 3);
+      setActiveGoals(active);
+    }
+  };
 
   const checkOverdueGoals = () => {
     const storedGoals = localStorage.getItem('bestie-goals');
@@ -77,6 +102,7 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       });
       
       setHasOverdueGoals(hasOverdue);
+      loadActiveGoals();
     }
   };
   
@@ -350,8 +376,30 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       {!capturedImage && (
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="grid grid-cols-3 items-center p-6 pb-32">
-            <div className="flex items-center justify-start">
+          <div className="flex items-center justify-between p-6 pb-32 px-8">
+            {/* Left side - Goal buttons */}
+            <div className="flex items-center gap-3">
+              {activeGoals.map((goal, index) => (
+                <GoalButton key={goal.id || index} goal={goal} onClick={() => {}} />
+              ))}
+            </div>
+            
+            {/* Center - Capture button */}
+            <div className="flex items-center justify-center">
+              <button
+                onClick={capturePhoto}
+                className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
+              />
+            </div>
+            
+            {/* Right side - Notes and Goals dashboard */}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onOpenNotes}
+                className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+              >
+                <StickyNote className="h-6 w-6 text-white" />
+              </button>
               <button
                 onClick={onOpenGoals}
                 className="relative w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
@@ -362,20 +410,6 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
                     <Timer className="h-3.5 w-3.5 text-white" />
                   </div>
                 )}
-              </button>
-            </div>
-            <div className="flex items-center justify-center">
-              <button
-                onClick={capturePhoto}
-                className="w-20 h-20 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
-              />
-            </div>
-            <div className="flex items-center justify-end gap-3">
-              <button
-                onClick={onOpenNotes}
-                className="w-14 h-14 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
-              >
-                <StickyNote className="h-6 w-6 text-white" />
               </button>
             </div>
           </div>
