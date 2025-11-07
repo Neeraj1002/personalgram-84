@@ -31,9 +31,10 @@ export interface Note {
 
 interface DashboardProps {
   onBack?: () => void;
+  onViewGoalDetail?: (goalId: string) => void;
 }
 
-const Dashboard = ({ onBack }: DashboardProps) => {
+const Dashboard = ({ onBack, onViewGoalDetail }: DashboardProps) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'completed'>('all');
@@ -292,6 +293,7 @@ const Dashboard = ({ onBack }: DashboardProps) => {
                 goal={goal} 
                 onUpdate={updateGoal}
                 onDelete={deleteGoal}
+                onViewDetail={onViewGoalDetail}
                 showStreak
               />
             ))

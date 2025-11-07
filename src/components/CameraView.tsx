@@ -8,6 +8,7 @@ interface CameraViewProps {
   onSaveMemory?: () => void;
   onCapture?: (image: { dataUrl: string; blob: Blob }) => void;
   onCloseCapture?: () => void;
+  onViewGoalDetail?: (goalId: string) => void;
 }
 
 // Goal button component with streak indicators
@@ -48,7 +49,7 @@ const GoalButton = ({ goal, onClick }: { goal: any, onClick?: () => void }) => {
   );
 };
 
-const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onCloseCapture }: CameraViewProps) => {
+const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onCloseCapture, onViewGoalDetail }: CameraViewProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -381,7 +382,11 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
             {activeGoals.length > 0 && (
               <div className="flex items-center gap-2 flex-shrink-0">
                 {activeGoals.map((goal, index) => (
-                  <GoalButton key={goal.id || index} goal={goal} onClick={() => {}} />
+                  <GoalButton 
+                    key={goal.id || index} 
+                    goal={goal} 
+                    onClick={() => onViewGoalDetail?.(goal.id)} 
+                  />
                 ))}
               </div>
             )}

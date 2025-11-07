@@ -4,12 +4,14 @@ import Dashboard from './Dashboard';
 import MemoriesView from './MemoriesView';
 import ChatView from './ChatView';
 import NotesView from './NotesView';
+import GoalDetailView from './GoalDetailView';
 import BottomNavigation from './BottomNavigation';
 import TagGoalDialog from './TagGoalDialog';
 
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState<'bestie' | 'capture' | 'memories'>('capture');
-  const [currentView, setCurrentView] = useState<'main' | 'notes' | 'goals'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'notes' | 'goals' | 'goal-detail'>('main');
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [showTagDialog, setShowTagDialog] = useState(false);
 
@@ -20,7 +22,24 @@ const MainApp = () => {
     }
 
     if (currentView === 'goals') {
-      return <Dashboard onBack={() => setCurrentView('main')} />;
+      return (
+        <Dashboard 
+          onBack={() => setCurrentView('main')}
+          onViewGoalDetail={(goalId) => {
+            setSelectedGoalId(goalId);
+            setCurrentView('goal-detail');
+          }}
+        />
+      );
+    }
+
+    if (currentView === 'goal-detail' && selectedGoalId) {
+      return (
+        <GoalDetailView 
+          goalId={selectedGoalId}
+          onBack={() => setCurrentView('goals')}
+        />
+      );
     }
 
     // Handle main tab views
@@ -35,6 +54,10 @@ const MainApp = () => {
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
             onCloseCapture={() => setCapturedImage(null)}
+            onViewGoalDetail={(goalId) => {
+              setSelectedGoalId(goalId);
+              setCurrentView('goal-detail');
+            }}
           />
         );
       case 'memories':
@@ -47,6 +70,10 @@ const MainApp = () => {
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
             onCloseCapture={() => setCapturedImage(null)}
+            onViewGoalDetail={(goalId) => {
+              setSelectedGoalId(goalId);
+              setCurrentView('goal-detail');
+            }}
           />
         );
     }
