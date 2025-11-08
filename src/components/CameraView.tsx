@@ -377,10 +377,10 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       {!capturedImage && (
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="relative flex items-center justify-center p-4 pb-32 px-4">
-            {/* Left side - Goal buttons (absolute positioned to the left of center) */}
+          <div className="flex items-center justify-center gap-3 p-4 pb-32 px-4">
+            {/* Left side - Goal buttons immediately to the left of capture */}
             {activeGoals.length > 0 && (
-              <div className="absolute left-1/2 -translate-x-full flex items-center gap-2 flex-shrink-0 pr-3">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {activeGoals.map((goal, index) => (
                   <GoalButton 
                     key={goal.id || index} 
@@ -391,32 +391,30 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
               </div>
             )}
             
-            {/* Center - Capture button (always centered) */}
+            {/* Center - Capture button */}
             <button
               onClick={capturePhoto}
-              className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0 z-10"
+              className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0"
             />
             
-            {/* Right side - Notes and Goals dashboard (absolute positioned to the right of center) */}
-            <div className="absolute left-1/2 translate-x-full flex items-center gap-3 flex-shrink-0 pl-3">
-              <button
-                onClick={onOpenNotes}
-                className="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-              >
-                <StickyNote className="h-5 w-5 text-white" />
-              </button>
-              <button
-                onClick={onOpenGoals}
-                className="relative w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-              >
-                <ListChecks className="h-5 w-5 text-white" />
-                {hasOverdueGoals && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-companion-peach flex items-center justify-center">
-                    <Timer className="h-3 w-3 text-white" />
-                  </div>
-                )}
-              </button>
-            </div>
+            {/* Right side - Notes and Goals dashboard */}
+            <button
+              onClick={onOpenNotes}
+              className="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
+            >
+              <StickyNote className="h-5 w-5 text-white" />
+            </button>
+            <button
+              onClick={onOpenGoals}
+              className="relative w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
+            >
+              <ListChecks className="h-5 w-5 text-white" />
+              {hasOverdueGoals && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-companion-peach flex items-center justify-center">
+                  <Timer className="h-3 w-3 text-white" />
+                </div>
+              )}
+            </button>
           </div>
         </div>
       )}
