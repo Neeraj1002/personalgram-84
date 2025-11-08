@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks, SwitchCamera, X, Save, Timer } from 'lucide-react';
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 
 interface CameraViewProps {
   onOpenNotes?: () => void;
@@ -132,7 +134,19 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       setCameraState('loading');
       setErrorMessage('');
       
-      // Check if mediaDevices is available
+      // Check if running on native platform
+      const isNative = Capacitor.isNativePlatform();
+      addDebug(`Platform: ${isNative ? 'Native' : 'Web'}`);
+      
+      if (isNative) {
+        // On native, we don't need to start a stream - just set ready state
+        // Camera will be accessed when user taps capture button
+        addDebug('✅ Native camera ready');
+        setCameraState('ready');
+        return;
+      }
+      
+      // Web browser flow (original code)
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         throw new Error('getUserMedia is not supported in this browser');
       }
@@ -203,31 +217,66 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
   };
 
   const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(video, 0, 0);
+    try {
+      const isNative = Capacitor.isNativePlatform();
       
-      // Convert canvas to blob and data URL
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const dataUrl = canvas.toDataURL('image/png');
-          setCapturedImage(dataUrl);
-          setCapturedBlob(blob);
-          setTaggingMode(false);
-          addDebug('📸 Photo captured!');
-          
-          // Notify parent component
-          onCapture?.({ dataUrl, blob });
-        }
-      }, 'image/png');
+      if (isNative) {
+        // Use Capacitor Camera plugin on native
+        addDebug('📸 Using native camera...');
+        
+        const image = await CapCamera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Uri,
+          source: CameraSource.Camera,
+          saveToGallery: false
+        });
+        
+        addDebug('✅ Native photo captured!');
+        
+        // Convert to blob
+        const response = await fetch(image.webPath!);
+        const blob = await response.blob();
+        const dataUrl = URL.createObjectURL(blob);
+        
+        setCapturedImage(dataUrl);
+        setCapturedBlob(blob);
+        setTaggingMode(false);
+        
+        onCapture?.({ dataUrl, blob });
+        return;
+      }
+      
+      // Web browser flow (original code)
+      if (!videoRef.current || !canvasRef.current) return;
+      
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(video, 0, 0);
+        
+        // Convert canvas to blob and data URL
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const dataUrl = canvas.toDataURL('image/png');
+            setCapturedImage(dataUrl);
+            setCapturedBlob(blob);
+            setTaggingMode(false);
+            addDebug('📸 Photo captured!');
+            
+            // Notify parent component
+            onCapture?.({ dataUrl, blob });
+          }
+        }, 'image/png');
+      }
+    } catch (err: any) {
+      addDebug(`❌ Camera error: ${err.message}`);
+      console.error('Failed to capture photo:', err);
     }
   };
   
@@ -338,12 +387,20 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
     );
   }
 
+  const isNative = Capacitor.isNativePlatform();
+
   return (
     <div className="h-screen bg-black relative overflow-hidden">
       {/* Camera feed or captured image */}
       {capturedImage ? (
         <img src={capturedImage} alt="Captured" className="w-full h-full object-contain bg-black" />
+      ) : isNative ? (
+        // Native: Show camera placeholder
+        <div className="w-full h-full flex items-center justify-center bg-black">
+          <Camera className="h-24 w-24 text-white/30" />
+        </div>
       ) : (
+        // Web: Show video stream
         <video
           ref={videoRef}
           autoPlay
