@@ -8,9 +8,10 @@ interface NoteCardProps {
   note: Note;
   onUpdate: (noteId: string, updates: Partial<Note>) => void;
   onDelete: (noteId: string) => void;
+  onEdit: (note: Note) => void;
 }
 
-export const NoteCard = ({ note, onUpdate, onDelete }: NoteCardProps) => {
+export const NoteCard = ({ note, onUpdate, onDelete, onEdit }: NoteCardProps) => {
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
@@ -43,7 +44,7 @@ export const NoteCard = ({ note, onUpdate, onDelete }: NoteCardProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onEdit(note)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
