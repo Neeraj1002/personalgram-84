@@ -1,9 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Calendar } from 'lucide-react';
+import { ImageViewer } from './ImageViewer';
+
+interface Photo {
+  id: number;
+  url: string;
+  timestamp: number;
+}
 
 const MemoriesView = () => {
-  const [photos, setPhotos] = useState<Array<{ id: number; url: string; timestamp: number }>>([]);
+  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
 
   useEffect(() => {
     loadPhotos();
@@ -46,6 +55,30 @@ const MemoriesView = () => {
     }
   };
 
+  const handlePhotoClick = (index: number) => {
+    setSelectedPhotoIndex(index);
+    setViewerOpen(true);
+  };
+
+  const handleDeletePhoto = async (photoId: number) => {
+    try {
+      const request = indexedDB.open('BestiePhotos', 2);
+      
+      request.onsuccess = () => {
+        const db = request.result;
+        const tx = db.transaction('photos', 'readwrite');
+        const store = tx.objectStore('photos');
+        store.delete(photoId);
+        
+        tx.oncomplete = () => {
+          setPhotos(prev => prev.filter(p => p.id !== photoId));
+        };
+      };
+    } catch (err) {
+      console.error('Failed to delete photo:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-companion-cream via-background to-companion-cream-dark pt-16 pb-24">
       <div className="container mx-auto px-6 py-8">
@@ -76,8 +109,12 @@ const MemoriesView = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                {photos.map((photo, index) => (
+                  <button
+                    key={photo.id}
+                    onClick={() => handlePhotoClick(index)}
+                    className="relative aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-companion-peach"
+                  >
                     <img 
                       src={photo.url} 
                       alt={`Memory from ${new Date(photo.timestamp).toLocaleDateString()}`}
@@ -88,13 +125,23 @@ const MemoriesView = () => {
                         {new Date(photo.timestamp).toLocaleDateString()}
                       </p>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Full Image Viewer */}
+      {viewerOpen && (
+        <ImageViewer
+          photos={photos}
+          initialIndex={selectedPhotoIndex}
+          onClose={() => setViewerOpen(false)}
+          onDelete={handleDeletePhoto}
+        />
+      )}
     </div>
   );
 };

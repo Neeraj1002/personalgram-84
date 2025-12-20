@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Plus, PenTool } from 'lucide-react';
 import { NoteCard } from './NoteCard';
 import { AddNoteDialog } from './AddNoteDialog';
+import { EditNoteDialog } from './EditNoteDialog';
 import { Note } from './Dashboard';
 
 interface NotesViewProps {
@@ -13,6 +14,8 @@ interface NotesViewProps {
 const NotesView = ({ onBack }: NotesViewProps) => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [showAddNote, setShowAddNote] = useState(false);
+  const [showEditNote, setShowEditNote] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   // Load notes from localStorage on mount
   useEffect(() => {
@@ -52,6 +55,11 @@ const NotesView = ({ onBack }: NotesViewProps) => {
 
   const deleteNote = (noteId: string) => {
     setNotes(prev => prev.filter(note => note.id !== noteId));
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setShowEditNote(true);
   };
 
   return (
@@ -100,6 +108,7 @@ const NotesView = ({ onBack }: NotesViewProps) => {
                     note={note} 
                     onUpdate={updateNote}
                     onDelete={deleteNote}
+                    onEdit={handleEditNote}
                   />
                 </CardContent>
               </Card>
@@ -113,6 +122,14 @@ const NotesView = ({ onBack }: NotesViewProps) => {
         open={showAddNote} 
         onOpenChange={setShowAddNote}
         onAdd={addNote}
+      />
+
+      {/* Edit Note Dialog */}
+      <EditNoteDialog
+        open={showEditNote}
+        onOpenChange={setShowEditNote}
+        note={editingNote}
+        onUpdate={updateNote}
       />
     </div>
   );
