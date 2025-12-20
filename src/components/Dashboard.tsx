@@ -142,15 +142,38 @@ const Dashboard = ({ onBack, onViewGoalDetail }: DashboardProps) => {
     if (activeGoals.length === 0) return 0;
     
     const consistencies = activeGoals.map(goal => {
-      const daysSinceCreated = Math.floor(
-        (new Date().getTime() - goal.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-      );
-      const possibleCompletions = Math.max(daysSinceCreated, 1);
-      return (goal.completedDates.length / possibleCompletions) * 100;
+      const createdAt = new Date(goal.createdAt);
+      createdAt.setHours(0, 0, 0, 0);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Count how many scheduled days have passed since goal creation
+      let scheduledDays = 0;
+      const currentDate = new Date(createdAt);
+      
+      // Limit to goal duration or days elapsed, whichever is smaller
+      const daysElapsed = Math.floor((today.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24));
+      const effectiveDays = Math.min(daysElapsed, goal.duration);
+      
+      for (let i = 0; i <= effectiveDays; i++) {
+        const dayOfWeek = currentDate.getDay();
+        if (goal.selectedDays.includes(dayOfWeek)) {
+          scheduledDays++;
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+      
+      // If no scheduled days have passed yet, return 0
+      if (scheduledDays === 0) return 0;
+      
+      // Calculate consistency as completed / scheduled
+      const completedCount = goal.completedDates.length;
+      return Math.min((completedCount / scheduledDays) * 100, 100);
     });
     
-    const averageConsistency = consistencies.reduce((sum, val) => sum + val, 0) / consistencies.length;
-    return Math.round(averageConsistency);
+    // Average consistency across all goals
+    const totalConsistency = consistencies.reduce((sum, val) => sum + val, 0);
+    return Math.round(totalConsistency / activeGoals.length);
   };
 
   const filteredGoals = getFilteredGoals();

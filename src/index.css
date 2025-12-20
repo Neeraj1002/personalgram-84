@@ -145,4 +145,15 @@ All colors MUST be HSL.
   .safe-area-pb {
     padding-bottom: env(safe-area-inset-bottom);
   }
+
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top, 24px);
+  }
+
+  .safe-area-inset {
+    padding-top: env(safe-area-inset-top, 24px);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
 }

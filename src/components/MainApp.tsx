@@ -80,7 +80,7 @@ const MainApp = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative safe-area-pt">
       {renderActiveView()}
       <BottomNavigation 
         activeTab={activeTab} 
