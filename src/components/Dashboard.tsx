@@ -19,6 +19,7 @@ export interface Goal {
   createdAt: Date;
   isActive: boolean;
   state: 'active' | 'inactive' | 'completed';
+  scheduledTime?: string;
 }
 
 export interface Note {

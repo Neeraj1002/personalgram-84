@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Clock } from 'lucide-react';
 import { Goal } from './Dashboard';
 
 interface AddGoalDialogProps {
@@ -22,6 +22,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
   const [description, setDescription] = useState('');
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
   const [duration, setDuration] = useState<string>('30');
+  const [scheduledTime, setScheduledTime] = useState<string>('');
 
   const toggleDay = (dayIndex: number) => {
     setSelectedDays(prev => 
@@ -42,7 +43,8 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
       title: title.trim(),
       description: description.trim() || undefined,
       selectedDays,
-      duration: parseInt(duration)
+      duration: parseInt(duration),
+      scheduledTime: scheduledTime || undefined
     });
 
     // Reset form
@@ -50,6 +52,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
     setDescription('');
     setSelectedDays([]);
     setDuration('30');
+    setScheduledTime('');
     onOpenChange(false);
   };
 
@@ -131,6 +134,23 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
                 <SelectItem value="90">90 Days</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="scheduledTime" className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Scheduled Time <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Input
+              id="scheduledTime"
+              type="time"
+              value={scheduledTime}
+              onChange={(e) => setScheduledTime(e.target.value)}
+              className="bg-background/50 border-companion-green-light focus:border-companion-green"
+            />
+            <p className="text-xs text-muted-foreground">
+              Set a time to receive reminders 1 hour before
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4">

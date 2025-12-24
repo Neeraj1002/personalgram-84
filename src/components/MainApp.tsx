@@ -1,19 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import CameraView from './CameraView';
 import Dashboard from './Dashboard';
 import MemoriesView from './MemoriesView';
 import ChatView from './ChatView';
 import NotesView from './NotesView';
 import GoalDetailView from './GoalDetailView';
+import ScheduleView from './ScheduleView';
 import BottomNavigation from './BottomNavigation';
 import TagGoalDialog from './TagGoalDialog';
+import useNotifications from '@/hooks/useNotifications';
 
 const MainApp = () => {
-  const [activeTab, setActiveTab] = useState<'bestie' | 'capture' | 'memories'>('capture');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'bestie' | 'capture' | 'memories'>('capture');
   const [currentView, setCurrentView] = useState<'main' | 'notes' | 'goals' | 'goal-detail'>('main');
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [showTagDialog, setShowTagDialog] = useState(false);
+
+  // Initialize notifications
+  useNotifications();
 
   const renderActiveView = () => {
     // Handle overlay views first
@@ -44,6 +49,8 @@ const MainApp = () => {
 
     // Handle main tab views
     switch (activeTab) {
+      case 'schedule':
+        return <ScheduleView />;
       case 'bestie':
         return <ChatView onBack={() => setActiveTab('capture')} />;
       case 'capture':
