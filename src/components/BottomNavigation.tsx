@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Camera, Heart, Save, Tag } from 'lucide-react';
+import { MessageCircle, Camera, Heart, Save, Tag, CalendarDays } from 'lucide-react';
 
 interface BottomNavigationProps {
-  activeTab: 'bestie' | 'capture' | 'memories';
-  onTabChange: (tab: 'bestie' | 'capture' | 'memories') => void;
+  activeTab: 'schedule' | 'bestie' | 'capture' | 'memories';
+  onTabChange: (tab: 'schedule' | 'bestie' | 'capture' | 'memories') => void;
   capturedImage?: { dataUrl: string; blob: Blob } | null;
   onSaveCapture?: () => void;
   onTagCapture?: () => void;
@@ -49,14 +49,28 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
         <Button
           variant="ghost"
           size="lg"
+          onClick={() => onTabChange('schedule')}
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+            activeTab === 'schedule' 
+              ? 'text-teal-400' 
+              : 'text-white/70 hover:text-white'
+          }`}
+        >
+          <CalendarDays className="h-5 w-5" />
+          <span className="text-xs">Schedule</span>
+        </Button>
+
+        <Button
+          variant="ghost"
+          size="lg"
           onClick={() => onTabChange('bestie')}
-          className={`flex flex-col items-center gap-1 h-auto py-3 px-6 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
             activeTab === 'bestie' 
               ? 'text-companion-green' 
               : 'text-white/70 hover:text-white'
           }`}
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageCircle className="h-5 w-5" />
           <span className="text-xs">Bestie</span>
         </Button>
 
@@ -64,13 +78,13 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('capture')}
-          className={`flex flex-col items-center gap-1 h-auto py-3 px-6 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
             activeTab === 'capture' 
               ? 'text-white' 
               : 'text-white/70 hover:text-white'
           }`}
         >
-          <Camera className="h-6 w-6" />
+          <Camera className="h-5 w-5" />
           <span className="text-xs">Capture</span>
         </Button>
 
@@ -78,13 +92,13 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('memories')}
-          className={`flex flex-col items-center gap-1 h-auto py-3 px-6 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
             activeTab === 'memories' 
               ? 'text-companion-peach' 
               : 'text-white/70 hover:text-white'
           }`}
         >
-          <Heart className="h-6 w-6" />
+          <Heart className="h-5 w-5" />
           <span className="text-xs">Memories</span>
         </Button>
       </div>
