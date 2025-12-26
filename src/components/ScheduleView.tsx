@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, CheckCircle } from 'lucide-react';
-import { format, startOfWeek, addDays, isSameDay, isToday } from 'date-fns';
+import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, CheckCircle, Pencil } from 'lucide-react';
+import { format, startOfWeek, addDays, isSameDay, isToday, isBefore, startOfDay, subWeeks } from 'date-fns';
 import { Goal } from './Dashboard';
 import AddScheduleTaskDialog, { ScheduleTask } from './AddScheduleTaskDialog';
+import EditScheduleTaskDialog from './EditScheduleTaskDialog';
 
 interface ScheduleItem {
   id: string;
@@ -23,6 +24,8 @@ const ScheduleView = () => {
   const [tasks, setTasks] = useState<ScheduleTask[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddTask, setShowAddTask] = useState(false);
+  const [showEditTask, setShowEditTask] = useState(false);
+  const [editingTask, setEditingTask] = useState<ScheduleTask | null>(null);
 
   // Load goals from localStorage
   useEffect(() => {
@@ -38,15 +41,23 @@ const ScheduleView = () => {
     }
   }, []);
 
-  // Load tasks from localStorage
+  // Load tasks from localStorage and clean up old tasks (older than 6 weeks)
   useEffect(() => {
     const savedTasks = localStorage.getItem('bestie-schedule-tasks');
     if (savedTasks) {
-      const parsedTasks = JSON.parse(savedTasks).map((task: any) => ({
-        ...task,
-        createdAt: new Date(task.createdAt)
-      }));
+      const sixWeeksAgo = subWeeks(new Date(), 6);
+      const parsedTasks = JSON.parse(savedTasks)
+        .map((task: any) => ({
+          ...task,
+          createdAt: new Date(task.createdAt)
+        }))
+        .filter((task: ScheduleTask) => {
+          const taskDate = new Date(task.date);
+          return taskDate >= sixWeeksAgo;
+        });
       setTasks(parsedTasks);
+      // Save cleaned tasks back
+      localStorage.setItem('bestie-schedule-tasks', JSON.stringify(parsedTasks));
     }
   }, []);
 
@@ -59,6 +70,14 @@ const ScheduleView = () => {
   // Add new task
   const handleTaskAdded = (task: ScheduleTask) => {
     const updatedTasks = [...tasks, task];
+    saveTasks(updatedTasks);
+  };
+
+  // Update existing task
+  const handleTaskUpdated = (updatedTask: ScheduleTask) => {
+    const updatedTasks = tasks.map(task =>
+      task.id === updatedTask.id ? updatedTask : task
+    );
     saveTasks(updatedTasks);
   };
 
@@ -76,10 +95,33 @@ const ScheduleView = () => {
     saveTasks(updatedTasks);
   };
 
+  // Check if a task is in the past (can't be edited)
+  const isTaskPast = (task: ScheduleTask) => {
+    const taskDateTime = new Date(`${task.date}T${task.scheduledTime}`);
+    return isBefore(taskDateTime, new Date());
+  };
+
+  // Open edit dialog
+  const openEditTask = (task: ScheduleTask) => {
+    if (isTaskPast(task)) {
+      return; // Don't allow editing past tasks
+    }
+    setEditingTask(task);
+    setShowEditTask(true);
+  };
+
   // Get week days starting from Sunday
   const weekDays = useMemo(() => {
     const start = startOfWeek(currentDate, { weekStartsOn: 0 });
     return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  }, [currentDate]);
+
+  // Check if current week contains today (for disabling right nav)
+  const isCurrentWeek = useMemo(() => {
+    const today = new Date();
+    const start = startOfWeek(currentDate, { weekStartsOn: 0 });
+    const end = addDays(start, 6);
+    return today >= start && today <= end;
   }, [currentDate]);
 
   // Check if goal is completed for a specific date
@@ -139,17 +181,18 @@ const ScheduleView = () => {
   };
 
   const goToNextWeek = () => {
-    setCurrentDate(prev => addDays(prev, 7));
+    if (!isCurrentWeek) {
+      setCurrentDate(prev => addDays(prev, 7));
+    }
   };
 
-  // Get time display
+  // Get time display with proper AM/PM
   const getTimeDisplay = (time?: string) => {
     if (!time) return null;
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+    const [hours, minutes] = time.split(':').map(Number);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours % 12 || 12;
+    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   };
 
   // Get item color based on type and index
@@ -267,7 +310,8 @@ const ScheduleView = () => {
             variant="ghost" 
             size="icon" 
             onClick={goToNextWeek}
-            className="text-white hover:bg-white/20"
+            disabled={isCurrentWeek}
+            className={`text-white hover:bg-white/20 ${isCurrentWeek ? 'opacity-30 cursor-not-allowed' : ''}`}
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
@@ -323,83 +367,102 @@ const ScheduleView = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {scheduleItems.map((item, index) => (
-              <div key={item.id} className="flex gap-3 items-stretch">
-                {/* Time column - fixed width, vertically centered */}
-                <div className="w-16 flex-shrink-0 flex items-center justify-end pr-2">
-                  <span className="text-xs text-muted-foreground font-medium">
-                    {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : ''}
-                  </span>
-                </div>
-                
-                {/* Card */}
-                <Card 
-                  className={`flex-1 p-4 border-l-4 ${getItemColor(item, index)} ${
-                    item.isCompleted ? 'opacity-60' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          item.type === 'goal' 
-                            ? 'bg-teal-100 text-teal-700' 
-                            : 'bg-purple-100 text-purple-700'
-                        }`}>
-                          {item.type === 'goal' ? '🎯 Goal' : '📋 Task'}
-                        </span>
-                      </div>
-                      <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
-                        {getItemIcon(item)} {item.title}
-                      </h3>
-                      {item.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                      )}
-                      {item.type === 'goal' && item.goalData && (
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs text-muted-foreground">
-                            {item.goalData.completedDates.length}/{item.goalData.duration} days
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {item.type === 'task' && item.taskData && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => toggleTaskComplete(item.taskData!.id)}
-                          >
-                            <CheckCircle className={`h-5 w-5 ${
-                              item.isCompleted ? 'text-green-500 fill-green-500' : 'text-muted-foreground'
-                            }`} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => deleteTask(item.taskData!.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      )}
-                      {item.type === 'goal' && (
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          item.isCompleted 
-                            ? 'bg-green-500 text-white' 
-                            : 'bg-muted'
-                        }`}>
-                          {item.isCompleted ? '✓' : ''}
-                        </div>
-                      )}
-                    </div>
+            {scheduleItems.map((item, index) => {
+              const isPast = item.taskData ? isTaskPast(item.taskData) : false;
+              
+              return (
+                <div key={item.id} className="flex gap-3 items-stretch">
+                  {/* Time column - fixed width, vertically centered */}
+                  <div className="w-16 flex-shrink-0 flex items-center justify-end pr-2">
+                    <span className="text-xs text-muted-foreground font-medium">
+                      {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : ''}
+                    </span>
                   </div>
-                </Card>
-              </div>
-            ))}
+                  
+                  {/* Card */}
+                  <Card 
+                    className={`flex-1 p-4 border-l-4 ${getItemColor(item, index)} ${
+                      item.isCompleted ? 'opacity-60' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            item.type === 'goal' 
+                              ? 'bg-teal-100 text-teal-700' 
+                              : 'bg-purple-100 text-purple-700'
+                          }`}>
+                            {item.type === 'goal' ? '🎯 Goal' : '📋 Task'}
+                          </span>
+                          {isPast && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                              Past
+                            </span>
+                          )}
+                        </div>
+                        <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
+                          {getItemIcon(item)} {item.title}
+                        </h3>
+                        {item.description && (
+                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                        )}
+                        {item.type === 'goal' && item.goalData && (
+                          <div className="flex items-center gap-2 mt-2">
+                            <span className="text-xs text-muted-foreground">
+                              {item.goalData.completedDates.length}/{item.goalData.duration} days
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {item.type === 'task' && item.taskData && (
+                          <>
+                            {!isPast && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => openEditTask(item.taskData!)}
+                              >
+                                <Pencil className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => toggleTaskComplete(item.taskData!.id)}
+                            >
+                              <CheckCircle className={`h-5 w-5 ${
+                                item.isCompleted ? 'text-green-500 fill-green-500' : 'text-muted-foreground'
+                              }`} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => deleteTask(item.taskData!.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {item.type === 'goal' && (
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            item.isCompleted 
+                              ? 'bg-green-500 text-white' 
+                              : 'bg-muted'
+                          }`}>
+                            {item.isCompleted ? '✓' : ''}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -409,6 +472,13 @@ const ScheduleView = () => {
         onOpenChange={setShowAddTask}
         selectedDate={selectedDate}
         onTaskAdded={handleTaskAdded}
+      />
+
+      <EditScheduleTaskDialog
+        open={showEditTask}
+        onOpenChange={setShowEditTask}
+        task={editingTask}
+        onTaskUpdated={handleTaskUpdated}
       />
     </div>
   );
