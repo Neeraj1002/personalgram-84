@@ -322,22 +322,19 @@ const ScheduleView = () => {
             </Button>
           </div>
         ) : (
-          <div className="relative">
-            {/* Time markers */}
-            <div className="absolute left-0 top-0 bottom-0 w-16 flex flex-col">
-              {scheduleItems.map((item) => (
-                <div key={`time-${item.id}`} className="text-xs text-muted-foreground py-4">
-                  {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : ''}
+          <div className="space-y-3">
+            {scheduleItems.map((item, index) => (
+              <div key={item.id} className="flex gap-3 items-stretch">
+                {/* Time column - fixed width, vertically centered */}
+                <div className="w-16 flex-shrink-0 flex items-center justify-end pr-2">
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : ''}
+                  </span>
                 </div>
-              ))}
-            </div>
-
-            {/* Items timeline */}
-            <div className="ml-16 space-y-3">
-              {scheduleItems.map((item, index) => (
+                
+                {/* Card */}
                 <Card 
-                  key={item.id}
-                  className={`p-4 border-l-4 ${getItemColor(item, index)} ${
+                  className={`flex-1 p-4 border-l-4 ${getItemColor(item, index)} ${
                     item.isCompleted ? 'opacity-60' : ''
                   }`}
                 >
@@ -351,11 +348,6 @@ const ScheduleView = () => {
                         }`}>
                           {item.type === 'goal' ? '🎯 Goal' : '📋 Task'}
                         </span>
-                        {item.scheduledTime && (
-                          <span className={`text-sm font-medium ${getTextColor(item, index)}`}>
-                            {getTimeDisplay(item.scheduledTime)}
-                          </span>
-                        )}
                       </div>
                       <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
                         {getItemIcon(item)} {item.title}
@@ -406,8 +398,8 @@ const ScheduleView = () => {
                     </div>
                   </div>
                 </Card>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
