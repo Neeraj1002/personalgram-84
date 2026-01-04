@@ -33,12 +33,13 @@ export interface Note {
 interface DashboardProps {
   onBack?: () => void;
   onViewGoalDetail?: (goalId: string) => void;
+  onNavigateToSchedule?: () => void;
 }
 
-const Dashboard = ({ onBack, onViewGoalDetail }: DashboardProps) => {
+const Dashboard = ({ onBack, onViewGoalDetail, onNavigateToSchedule }: DashboardProps) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddGoal, setShowAddGoal] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'completed'>('all');
+  const [activeFilter, setActiveFilter] = useState<'active' | 'completed' | 'inactive'>('active');
 
   const calculateGoalState = (goal: Goal): 'active' | 'inactive' | 'completed' => {
     const daysSinceCreated = Math.floor(
@@ -130,11 +131,13 @@ const Dashboard = ({ onBack, onViewGoalDetail }: DashboardProps) => {
   const getFilteredGoals = () => {
     switch (activeFilter) {
       case 'active':
-        return goals.filter(goal => goal.isActive && isGoalActiveToday(goal) && !isGoalCompletedToday(goal));
+        return goals.filter(goal => goal.state === 'active');
       case 'completed':
-        return goals.filter(goal => goal.isActive && isGoalCompletedToday(goal));
+        return goals.filter(goal => goal.state === 'completed');
+      case 'inactive':
+        return goals.filter(goal => goal.state === 'inactive');
       default:
-        return goals.filter(goal => goal.isActive);
+        return goals.filter(goal => goal.state === 'active');
     }
   };
 
@@ -275,14 +278,15 @@ const Dashboard = ({ onBack, onViewGoalDetail }: DashboardProps) => {
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           <Button
-            variant={activeFilter === 'all' ? 'default' : 'outline'}
+            variant="outline"
             size="sm"
-            onClick={() => setActiveFilter('all')}
+            onClick={() => onNavigateToSchedule?.()}
             className="rounded-full"
           >
-            All
+            <Calendar className="h-3 w-3 mr-1" />
+            Today's Schedule
           </Button>
           <Button
             variant={activeFilter === 'active' ? 'default' : 'outline'}
@@ -299,6 +303,14 @@ const Dashboard = ({ onBack, onViewGoalDetail }: DashboardProps) => {
             className="rounded-full"
           >
             Completed
+          </Button>
+          <Button
+            variant={activeFilter === 'inactive' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('inactive')}
+            className="rounded-full"
+          >
+            Inactive
           </Button>
         </div>
 
