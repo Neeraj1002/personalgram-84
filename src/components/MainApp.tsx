@@ -34,6 +34,10 @@ const MainApp = () => {
             setSelectedGoalId(goalId);
             setCurrentView('goal-detail');
           }}
+          onNavigateToSchedule={() => {
+            setCurrentView('main');
+            setActiveTab('schedule');
+          }}
         />
       );
     }
