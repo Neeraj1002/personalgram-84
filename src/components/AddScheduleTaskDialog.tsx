@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 export interface ScheduleTask {
@@ -28,8 +29,20 @@ interface AddScheduleTaskDialogProps {
 const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }: AddScheduleTaskDialogProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [scheduledTime, setScheduledTime] = useState('09:00');
+  const [hour, setHour] = useState('09');
+  const [minute, setMinute] = useState('00');
+  const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
   const [isReminder, setIsReminder] = useState(true);
+
+  const convertTo24Hour = (h: string, m: string, p: 'AM' | 'PM'): string => {
+    let hour24 = parseInt(h, 10);
+    if (p === 'AM') {
+      if (hour24 === 12) hour24 = 0;
+    } else {
+      if (hour24 !== 12) hour24 += 12;
+    }
+    return `${hour24.toString().padStart(2, '0')}:${m}`;
+  };
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -37,10 +50,7 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
       return;
     }
 
-    if (!scheduledTime) {
-      toast.error('Please set a time');
-      return;
-    }
+    const scheduledTime = convertTo24Hour(hour, minute, period);
 
     const newTask: ScheduleTask = {
       id: Date.now().toString(),
@@ -58,12 +68,17 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
     // Reset form
     setTitle('');
     setDescription('');
-    setScheduledTime('09:00');
+    setHour('09');
+    setMinute('00');
+    setPeriod('AM');
     setIsReminder(true);
     onOpenChange(false);
     
     toast.success('Task added to schedule');
   };
+
+  const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+  const minutes = ['00', '15', '30', '45'];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,14 +110,39 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="time">Time</Label>
-            <Input
-              id="time"
-              type="time"
-              value={scheduledTime}
-              onChange={(e) => setScheduledTime(e.target.value)}
-              className="w-full"
-            />
+            <Label>Time</Label>
+            <div className="flex gap-2">
+              <Select value={hour} onValueChange={setHour}>
+                <SelectTrigger className="w-20">
+                  <SelectValue placeholder="Hour" />
+                </SelectTrigger>
+                <SelectContent>
+                  {hours.map((h) => (
+                    <SelectItem key={h} value={h}>{h}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="flex items-center text-lg font-medium">:</span>
+              <Select value={minute} onValueChange={setMinute}>
+                <SelectTrigger className="w-20">
+                  <SelectValue placeholder="Min" />
+                </SelectTrigger>
+                <SelectContent>
+                  {minutes.map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={period} onValueChange={(v) => setPeriod(v as 'AM' | 'PM')}>
+                <SelectTrigger className="w-20">
+                  <SelectValue placeholder="AM/PM" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AM">AM</SelectItem>
+                  <SelectItem value="PM">PM</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
