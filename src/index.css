@@ -8,52 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Companion App - Soft & Calming Colors */
-    --background: 40 40% 97%; /* Cream background */
-    --foreground: 0 0% 20%; /* Charcoal text */
+    /* Navy & Slate Color Palette */
+    --background: 216 33% 97%; /* #F5F7FA - Light grey-blue background */
+    --foreground: 217 29% 15%; /* #1C2533 - Dark text */
 
-    --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 0 0% 20%;
+    --card: 0 0% 100%; /* #FFFFFF - Pure white cards */
+    --card-foreground: 217 29% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 20%;
+    --popover-foreground: 217 29% 15%;
 
-    --primary: 123 35% 76%; /* Soft muted green */
-    --primary-foreground: 0 0% 20%;
+    --primary: 219 36% 27%; /* #2C3E5E - Dark Navy */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 40 40% 95%; /* Lighter cream */
-    --secondary-foreground: 0 0% 20%;
+    --secondary: 221 24% 41%; /* #506083 - Slate Blue */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 40 20% 92%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 216 20% 92%;
+    --muted-foreground: 220 9% 46%; /* #6B7280 - Secondary text */
 
-    --accent: 25 85% 81%; /* Warm peach */
-    --accent-foreground: 0 0% 20%;
+    --accent: 219 39% 68%; /* #8FA5CE - Soft Periwinkle */
+    --accent-foreground: 217 29% 15%;
 
-    --destructive: 0 70% 65%;
+    --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 40 25% 90%;
-    --input: 40 25% 88%;
-    --ring: 123 35% 76%;
+    --border: 216 20% 88%;
+    --input: 216 20% 85%;
+    --ring: 219 36% 27%;
 
-    /* Custom companion colors */
-    --companion-green: 123 35% 76%;
-    --companion-green-light: 123 35% 85%;
-    --companion-green-dark: 123 40% 65%;
-    --companion-cream: 40 40% 97%;
-    --companion-cream-dark: 40 30% 92%;
-    --companion-peach: 25 85% 81%;
-    --companion-peach-light: 25 70% 88%;
+    /* Custom navy palette colors */
+    --navy-dark: 219 36% 27%;
+    --navy-medium: 221 24% 41%;
+    --navy-light: 219 39% 68%;
+    --grey-background: 216 33% 97%;
+    --grey-muted: 220 9% 46%;
 
     /* Gradients */
-    --gradient-soft: linear-gradient(135deg, hsl(var(--companion-cream)), hsl(var(--companion-green-light)));
-    --gradient-warm: linear-gradient(135deg, hsl(var(--companion-peach-light)), hsl(var(--companion-cream)));
-    --gradient-gentle: linear-gradient(180deg, hsl(var(--background)), hsl(var(--companion-cream-dark)));
+    --gradient-soft: linear-gradient(135deg, hsl(var(--background)), hsl(var(--accent) / 0.3));
+    --gradient-warm: linear-gradient(135deg, hsl(var(--accent) / 0.2), hsl(var(--background)));
+    --gradient-gentle: linear-gradient(180deg, hsl(var(--background)), hsl(216 25% 94%));
 
     /* Shadows */
-    --shadow-soft: 0 4px 20px -4px hsl(var(--companion-green) / 0.15);
-    --shadow-gentle: 0 2px 12px -2px hsl(var(--companion-green) / 0.1);
+    --shadow-soft: 0 4px 20px -4px hsl(var(--primary) / 0.15);
+    --shadow-gentle: 0 2px 12px -2px hsl(var(--primary) / 0.1);
   
     /* Animations */
     --transition-gentle: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
@@ -62,20 +60,13 @@ All colors MUST be HSL.
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-foreground: 217 29% 15%;
+    --sidebar-primary: 219 36% 27%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 219 39% 68%;
+    --sidebar-accent-foreground: 217 29% 15%;
+    --sidebar-border: 216 20% 88%;
+    --sidebar-ring: 219 36% 27%;
   }
 
   .dark {
