@@ -52,15 +52,11 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// Companion app custom colors
-				companion: {
-					green: 'hsl(var(--companion-green))',
-					'green-light': 'hsl(var(--companion-green-light))',
-					'green-dark': 'hsl(var(--companion-green-dark))',
-					cream: 'hsl(var(--companion-cream))',
-					'cream-dark': 'hsl(var(--companion-cream-dark))',
-					peach: 'hsl(var(--companion-peach))',
-					'peach-light': 'hsl(var(--companion-peach-light))'
+				// Navy palette custom colors
+				navy: {
+					dark: 'hsl(var(--navy-dark))',
+					medium: 'hsl(var(--navy-medium))',
+					light: 'hsl(var(--navy-light))',
 				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
