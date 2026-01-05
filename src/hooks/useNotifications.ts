@@ -1,12 +1,5 @@
 import { useEffect, useCallback } from 'react';
 
-interface ScheduledNotification {
-  goalId: string;
-  goalTitle: string;
-  scheduledTime: string;
-  description?: string;
-}
-
 export const useNotifications = () => {
   // Request notification permission
   const requestPermission = useCallback(async () => {
@@ -16,29 +9,81 @@ export const useNotifications = () => {
     }
 
     if (Notification.permission === 'granted') {
+      console.log('Notifications already granted');
       return true;
     }
 
     if (Notification.permission !== 'denied') {
       const permission = await Notification.requestPermission();
+      console.log('Notification permission:', permission);
       return permission === 'granted';
     }
 
+    console.log('Notifications denied');
     return false;
   }, []);
 
   // Show notification
   const showNotification = useCallback((title: string, body: string) => {
+    console.log('Attempting to show notification:', title, body);
     if (Notification.permission === 'granted') {
-      new Notification(title, {
-        body,
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        tag: `goal-reminder-${Date.now()}`,
-        requireInteraction: true,
-      });
+      try {
+        new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: `goal-reminder-${Date.now()}`,
+          requireInteraction: true,
+        });
+        console.log('Notification shown successfully');
+      } catch (error) {
+        console.error('Error showing notification:', error);
+      }
+    } else {
+      console.log('Notification permission not granted');
     }
   }, []);
+
+  // Parse time string to hours and minutes (handles both 24h and 12h formats)
+  const parseTime = useCallback((timeStr: string): { hours: number; minutes: number } | null => {
+    if (!timeStr) return null;
+    
+    // Check if it's 24-hour format (HH:MM)
+    if (/^\d{1,2}:\d{2}$/.test(timeStr)) {
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      return { hours, minutes };
+    }
+    
+    // Check if it's 12-hour format (HH:MM AM/PM)
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (match) {
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const period = match[3].toUpperCase();
+      
+      if (period === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      return { hours, minutes };
+    }
+    
+    console.log('Could not parse time:', timeStr);
+    return null;
+  }, []);
+
+  // Format time for display
+  const formatTime = useCallback((time: string) => {
+    const parsed = parseTime(time);
+    if (!parsed) return time;
+    
+    const { hours, minutes } = parsed;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours % 12 || 12;
+    return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+  }, [parseTime]);
 
   // Schedule notifications for goals and tasks
   const scheduleNotifications = useCallback(() => {
@@ -46,18 +91,22 @@ export const useNotifications = () => {
     const today = now.getDay();
     const todayString = now.toISOString().split('T')[0];
 
+    console.log('Checking notifications at:', now.toLocaleTimeString());
+
     // Notify for goals
     const savedGoals = localStorage.getItem('bestie-goals');
     if (savedGoals) {
       const goals = JSON.parse(savedGoals);
       goals.forEach((goal: any) => {
-        if (!goal.isActive || !goal.scheduledTime || !goal.selectedDays.includes(today)) {
+        if (!goal.isActive || !goal.scheduledTime || !goal.selectedDays?.includes(today)) {
           return;
         }
 
-        const [hours, minutes] = goal.scheduledTime.split(':').map(Number);
+        const parsed = parseTime(goal.scheduledTime);
+        if (!parsed) return;
+
         const goalTime = new Date();
-        goalTime.setHours(hours, minutes, 0, 0);
+        goalTime.setHours(parsed.hours, parsed.minutes, 0, 0);
 
         // Calculate notification time (1 hour before)
         const notificationTime = new Date(goalTime);
@@ -68,6 +117,7 @@ export const useNotifications = () => {
         const notificationKey = `goal-notification-${goal.id}-${now.toDateString()}-${goal.scheduledTime}`;
         
         if (timeDiff <= 60000 && !localStorage.getItem(notificationKey)) {
+          console.log('Sending 1-hour reminder for goal:', goal.title);
           showNotification(
             `🔔 Goal Reminder: ${goal.title}`,
             `Starting in 1 hour at ${formatTime(goal.scheduledTime)}. ${goal.description || 'Get ready!'}`
@@ -80,6 +130,7 @@ export const useNotifications = () => {
         const startNotificationKey = `goal-start-${goal.id}-${now.toDateString()}-${goal.scheduledTime}`;
         
         if (goalTimeDiff <= 60000 && !localStorage.getItem(startNotificationKey)) {
+          console.log('Sending start notification for goal:', goal.title);
           showNotification(
             `⏰ It's time: ${goal.title}`,
             `Your goal "${goal.title}" is starting now!`
@@ -98,9 +149,11 @@ export const useNotifications = () => {
           return;
         }
 
-        const [hours, minutes] = task.scheduledTime.split(':').map(Number);
+        const parsed = parseTime(task.scheduledTime);
+        if (!parsed) return;
+
         const taskTime = new Date();
-        taskTime.setHours(hours, minutes, 0, 0);
+        taskTime.setHours(parsed.hours, parsed.minutes, 0, 0);
 
         // Calculate notification time (1 hour before)
         const notificationTime = new Date(taskTime);
@@ -111,6 +164,7 @@ export const useNotifications = () => {
         const notificationKey = `task-notification-${task.id}-${todayString}`;
         
         if (timeDiff <= 60000 && !localStorage.getItem(notificationKey)) {
+          console.log('Sending 1-hour reminder for task:', task.title);
           showNotification(
             `🔔 Task Reminder: ${task.title}`,
             `Scheduled for ${formatTime(task.scheduledTime)}. ${task.description || ''}`
@@ -123,6 +177,7 @@ export const useNotifications = () => {
         const startNotificationKey = `task-start-${task.id}-${todayString}`;
         
         if (taskTimeDiff <= 60000 && !localStorage.getItem(startNotificationKey)) {
+          console.log('Sending start notification for task:', task.title);
           showNotification(
             `⏰ Task Now: ${task.title}`,
             `Your scheduled task "${task.title}" is starting now!`
@@ -131,19 +186,11 @@ export const useNotifications = () => {
         }
       });
     }
-  }, [showNotification]);
-
-  // Format time for display
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
-  };
+  }, [showNotification, formatTime, parseTime]);
 
   // Setup notification checking interval
   useEffect(() => {
+    console.log('Initializing notifications...');
     requestPermission();
     
     // Check immediately
