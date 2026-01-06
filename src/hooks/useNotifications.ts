@@ -1,8 +1,18 @@
 import { useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
+import useLocalNotifications from './useLocalNotifications';
 
 export const useNotifications = () => {
-  // Request notification permission
+  const isNative = Capacitor.isNativePlatform();
+  const { scheduleAllNotifications: scheduleNativeNotifications } = useLocalNotifications();
+
+  // Request browser notification permission (for web only)
   const requestPermission = useCallback(async () => {
+    if (isNative) {
+      console.log('Using native notifications');
+      return true;
+    }
+
     if (!('Notification' in window)) {
       console.log('This browser does not support notifications');
       return false;
@@ -21,10 +31,12 @@ export const useNotifications = () => {
 
     console.log('Notifications denied');
     return false;
-  }, []);
+  }, [isNative]);
 
-  // Show notification
+  // Show browser notification (for web only)
   const showNotification = useCallback((title: string, body: string) => {
+    if (isNative) return; // Native uses scheduled notifications
+
     console.log('Attempting to show notification:', title, body);
     if (Notification.permission === 'granted') {
       try {
@@ -42,7 +54,7 @@ export const useNotifications = () => {
     } else {
       console.log('Notification permission not granted');
     }
-  }, []);
+  }, [isNative]);
 
   // Parse time string to hours and minutes (handles both 24h and 12h formats)
   const parseTime = useCallback((timeStr: string): { hours: number; minutes: number } | null => {
@@ -85,13 +97,19 @@ export const useNotifications = () => {
     return `${displayHour}:${minutes.toString().padStart(2, '0')} ${ampm}`;
   }, [parseTime]);
 
-  // Schedule notifications for goals and tasks
+  // Schedule browser notifications for goals and tasks (web only)
   const scheduleNotifications = useCallback(() => {
+    if (isNative) {
+      // Trigger native notification scheduling
+      scheduleNativeNotifications();
+      return;
+    }
+
     const now = new Date();
     const today = now.getDay();
     const todayString = now.toISOString().split('T')[0];
 
-    console.log('Checking notifications at:', now.toLocaleTimeString());
+    console.log('Checking browser notifications at:', now.toLocaleTimeString());
 
     // Notify for goals
     const savedGoals = localStorage.getItem('bestie-goals');
@@ -186,21 +204,22 @@ export const useNotifications = () => {
         }
       });
     }
-  }, [showNotification, formatTime, parseTime]);
+  }, [isNative, showNotification, formatTime, parseTime, scheduleNativeNotifications]);
 
   // Setup notification checking interval
   useEffect(() => {
-    console.log('Initializing notifications...');
+    console.log('Initializing notifications...', isNative ? '(Native mode)' : '(Web mode)');
     requestPermission();
     
-    // Check immediately
-    scheduleNotifications();
-    
-    // Check every minute
-    const interval = setInterval(scheduleNotifications, 60000);
-    
-    return () => clearInterval(interval);
-  }, [requestPermission, scheduleNotifications]);
+    if (!isNative) {
+      // Check immediately for web
+      scheduleNotifications();
+      
+      // Check every minute for web
+      const interval = setInterval(scheduleNotifications, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [requestPermission, scheduleNotifications, isNative]);
 
   return {
     requestPermission,
