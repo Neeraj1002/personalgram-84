@@ -431,11 +431,18 @@ const ScheduleView = () => {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className={`h-8 w-8 rounded-full ${
+                                item.isCompleted 
+                                  ? 'bg-green-100 hover:bg-green-200' 
+                                  : 'bg-muted hover:bg-muted/80'
+                              }`}
                               onClick={() => toggleTaskComplete(item.taskData!.id)}
+                              title={item.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
                             >
                               <CheckCircle className={`h-5 w-5 ${
-                                item.isCompleted ? 'text-green-500 fill-green-500' : 'text-muted-foreground'
+                                item.isCompleted 
+                                  ? 'text-green-600 fill-green-500' 
+                                  : 'text-muted-foreground/50'
                               }`} />
                             </Button>
                             <Button

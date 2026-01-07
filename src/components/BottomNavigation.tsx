@@ -50,7 +50,7 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('schedule')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 focus:outline-none focus-visible:outline-none ${
             activeTab === 'schedule' 
               ? 'text-teal-400' 
               : 'text-white/70 hover:text-white'
@@ -64,7 +64,7 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('bestie')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 focus:outline-none focus-visible:outline-none ${
             activeTab === 'bestie' 
               ? 'text-companion-green' 
               : 'text-white/70 hover:text-white'
@@ -78,7 +78,7 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('capture')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 focus:outline-none focus-visible:outline-none ${
             activeTab === 'capture' 
               ? 'text-white' 
               : 'text-white/70 hover:text-white'
@@ -92,7 +92,7 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('memories')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-3 focus:outline-none focus-visible:outline-none ${
             activeTab === 'memories' 
               ? 'text-companion-peach' 
               : 'text-white/70 hover:text-white'

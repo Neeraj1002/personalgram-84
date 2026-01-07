@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { isBefore, startOfDay } from 'date-fns';
 
 export interface ScheduleTask {
   id: string;
@@ -34,6 +35,21 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
   const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
   const [isReminder, setIsReminder] = useState(true);
 
+  // Check if selected date is in the past
+  const isPastDate = isBefore(startOfDay(selectedDate), startOfDay(new Date()));
+
+  // Reset form when dialog opens/closes or selectedDate changes
+  useEffect(() => {
+    if (open) {
+      setTitle('');
+      setDescription('');
+      setHour('09');
+      setMinute('00');
+      setPeriod('AM');
+      setIsReminder(true);
+    }
+  }, [open, selectedDate]);
+
   const convertTo24Hour = (h: string, m: string, p: 'AM' | 'PM'): string => {
     let hour24 = parseInt(h, 10);
     if (p === 'AM') {
@@ -45,6 +61,10 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
   };
 
   const handleSubmit = () => {
+    if (isPastDate) {
+      toast.error('Cannot add tasks to past dates');
+      return;
+    }
     if (!title.trim()) {
       toast.error('Please enter a title');
       return;
@@ -64,16 +84,7 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
     };
 
     onTaskAdded(newTask);
-    
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setHour('09');
-    setMinute('00');
-    setPeriod('AM');
-    setIsReminder(true);
     onOpenChange(false);
-    
     toast.success('Task added to schedule');
   };
 
@@ -85,6 +96,11 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add to Schedule</DialogTitle>
+          {isPastDate && (
+            <p className="text-sm text-destructive mt-1">
+              Cannot add tasks to past dates. Please select a future date.
+            </p>
+          )}
         </DialogHeader>
         
         <div className="space-y-4 py-4">
@@ -168,7 +184,7 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="flex-1">
+          <Button onClick={handleSubmit} className="flex-1" disabled={isPastDate}>
             Add Task
           </Button>
         </div>
