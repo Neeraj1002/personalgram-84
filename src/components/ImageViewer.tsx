@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Photo {
@@ -19,6 +19,7 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   const minSwipeDistance = 50;
 
@@ -110,17 +111,47 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
           {currentIndex + 1} / {photos.length}
         </span>
         
-        {onDelete && (
+        <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={handleDelete}
-            className="text-white hover:bg-destructive/50"
+            onClick={() => setShowInfo(!showInfo)}
+            className={`text-white hover:bg-white/20 ${showInfo ? 'bg-white/20' : ''}`}
           >
-            <Trash2 className="h-5 w-5" />
+            <Info className="h-5 w-5" />
           </Button>
-        )}
+          {onDelete && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleDelete}
+              className="text-white hover:bg-destructive/50"
+            >
+              <Trash2 className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Info Panel */}
+      {showInfo && currentPhoto && (
+        <div className="absolute top-16 left-4 right-4 bg-black/80 backdrop-blur-sm rounded-lg p-4 text-white z-10">
+          <h3 className="font-medium mb-2">Photo Details</h3>
+          <div className="space-y-1 text-sm text-white/80">
+            <p><span className="text-white/60">Date:</span> {new Date(currentPhoto.timestamp).toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}</p>
+            <p><span className="text-white/60">Time:</span> {new Date(currentPhoto.timestamp).toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}</p>
+            <p><span className="text-white/60">Photo ID:</span> {currentPhoto.id}</p>
+          </div>
+        </div>
+      )}
 
       {/* Main Image Area */}
       <div className="flex-1 flex items-center justify-center relative px-4">

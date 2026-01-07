@@ -73,6 +73,12 @@ const ScheduleView = () => {
     saveTasks(updatedTasks);
   };
 
+  // Add multiple tasks (for recurring)
+  const handleMultipleTasksAdded = (newTasks: ScheduleTask[]) => {
+    const updatedTasks = [...tasks, ...newTasks];
+    saveTasks(updatedTasks);
+  };
+
   // Update existing task
   const handleTaskUpdated = (updatedTask: ScheduleTask) => {
     const updatedTasks = tasks.map(task =>
@@ -479,6 +485,7 @@ const ScheduleView = () => {
         onOpenChange={setShowAddTask}
         selectedDate={selectedDate}
         onTaskAdded={handleTaskAdded}
+        onMultipleTasksAdded={handleMultipleTasksAdded}
       />
 
       <EditScheduleTaskDialog
