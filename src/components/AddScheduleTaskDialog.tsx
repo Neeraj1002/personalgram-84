@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { isBefore, startOfDay } from 'date-fns';
+import { isBefore, startOfDay, addDays, addWeeks } from 'date-fns';
 
 export interface ScheduleTask {
   id: string;
@@ -18,6 +18,8 @@ export interface ScheduleTask {
   isReminder: boolean;
   isCompleted: boolean;
   createdAt: Date;
+  recurrence?: 'none' | 'daily' | 'weekly';
+  recurrenceEndDate?: string;
 }
 
 interface AddScheduleTaskDialogProps {
@@ -25,15 +27,18 @@ interface AddScheduleTaskDialogProps {
   onOpenChange: (open: boolean) => void;
   selectedDate: Date;
   onTaskAdded: (task: ScheduleTask) => void;
+  onMultipleTasksAdded?: (tasks: ScheduleTask[]) => void;
 }
 
-const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }: AddScheduleTaskDialogProps) => {
+const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, onMultipleTasksAdded }: AddScheduleTaskDialogProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [hour, setHour] = useState('09');
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
   const [isReminder, setIsReminder] = useState(true);
+  const [recurrence, setRecurrence] = useState<'none' | 'daily' | 'weekly'>('none');
+  const [recurrenceWeeks, setRecurrenceWeeks] = useState('4');
 
   // Check if selected date is in the past
   const isPastDate = isBefore(startOfDay(selectedDate), startOfDay(new Date()));
@@ -47,6 +52,8 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
       setMinute('00');
       setPeriod('AM');
       setIsReminder(true);
+      setRecurrence('none');
+      setRecurrenceWeeks('4');
     }
   }, [open, selectedDate]);
 
@@ -71,21 +78,59 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
     }
 
     const scheduledTime = convertTo24Hour(hour, minute, period);
-
-    const newTask: ScheduleTask = {
-      id: Date.now().toString(),
+    const baseTask = {
       title: title.trim(),
       description: description.trim() || undefined,
       scheduledTime,
-      date: selectedDate.toISOString().split('T')[0],
       isReminder,
       isCompleted: false,
       createdAt: new Date(),
+      recurrence,
     };
 
-    onTaskAdded(newTask);
+    if (recurrence === 'none') {
+      const newTask: ScheduleTask = {
+        ...baseTask,
+        id: Date.now().toString(),
+        date: selectedDate.toISOString().split('T')[0],
+      };
+      onTaskAdded(newTask);
+      toast.success('Task added to schedule');
+    } else {
+      // Create recurring tasks
+      const tasks: ScheduleTask[] = [];
+      const weeks = parseInt(recurrenceWeeks, 10);
+      const totalDays = recurrence === 'daily' ? weeks * 7 : weeks;
+      
+      for (let i = 0; i < totalDays; i++) {
+        const taskDate = recurrence === 'daily' 
+          ? addDays(selectedDate, i) 
+          : addWeeks(selectedDate, i);
+        
+        // Skip past dates
+        if (isBefore(startOfDay(taskDate), startOfDay(new Date()))) continue;
+        
+        tasks.push({
+          ...baseTask,
+          id: `${Date.now()}-${i}`,
+          date: taskDate.toISOString().split('T')[0],
+          recurrenceEndDate: recurrence === 'daily' 
+            ? addDays(selectedDate, weeks * 7 - 1).toISOString().split('T')[0]
+            : addWeeks(selectedDate, weeks - 1).toISOString().split('T')[0],
+        });
+      }
+      
+      if (onMultipleTasksAdded && tasks.length > 0) {
+        onMultipleTasksAdded(tasks);
+        toast.success(`${tasks.length} recurring tasks added`);
+      } else if (tasks.length > 0) {
+        // Fallback: add tasks one by one
+        tasks.forEach(task => onTaskAdded(task));
+        toast.success(`${tasks.length} recurring tasks added`);
+      }
+    }
+    
     onOpenChange(false);
-    toast.success('Task added to schedule');
   };
 
   const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
@@ -93,7 +138,7 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add to Schedule</DialogTitle>
           {isPastDate && (
@@ -160,6 +205,44 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded }
               </Select>
             </div>
           </div>
+
+          <div className="space-y-2">
+            <Label>Repeat</Label>
+            <Select value={recurrence} onValueChange={(v) => setRecurrence(v as 'none' | 'daily' | 'weekly')}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No repeat</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {recurrence !== 'none' && (
+            <div className="space-y-2">
+              <Label>Duration</Label>
+              <Select value={recurrenceWeeks} onValueChange={setRecurrenceWeeks}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 week</SelectItem>
+                  <SelectItem value="2">2 weeks</SelectItem>
+                  <SelectItem value="4">4 weeks</SelectItem>
+                  <SelectItem value="8">8 weeks</SelectItem>
+                  <SelectItem value="12">12 weeks</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {recurrence === 'daily' 
+                  ? `Creates ${parseInt(recurrenceWeeks) * 7} tasks over ${recurrenceWeeks} weeks`
+                  : `Creates ${recurrenceWeeks} weekly tasks`
+                }
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">

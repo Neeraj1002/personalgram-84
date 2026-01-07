@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
 import CameraView from './CameraView';
 import Dashboard from './Dashboard';
 import MemoriesView from './MemoriesView';
@@ -11,7 +12,7 @@ import TagGoalDialog from './TagGoalDialog';
 import useNotifications from '@/hooks/useNotifications';
 
 const MainApp = () => {
-  const [activeTab, setActiveTab] = useState<'schedule' | 'bestie' | 'capture' | 'memories'>('capture');
+  const [activeTab, setActiveTab] = useState<'schedule' | 'bestie' | 'capture' | 'memories' | 'notes'>('capture');
   const [currentView, setCurrentView] = useState<'main' | 'notes' | 'goals' | 'goal-detail'>('main');
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
@@ -20,12 +21,67 @@ const MainApp = () => {
   // Initialize notifications
   useNotifications();
 
+  // Handle Android hardware back button
+  useEffect(() => {
+    let backButtonListener: { remove: () => void } | null = null;
+
+    const setupBackHandler = async () => {
+      try {
+        backButtonListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          // Handle captured image first
+          if (capturedImage) {
+            setCapturedImage(null);
+            return;
+          }
+
+          // Handle overlay views
+          if (currentView === 'goal-detail') {
+            setCurrentView('goals');
+            return;
+          }
+
+          if (currentView === 'goals') {
+            setCurrentView('main');
+            return;
+          }
+
+          // If on notes tab, go to capture
+          if (activeTab === 'notes') {
+            setActiveTab('capture');
+            return;
+          }
+
+          // If on main view but not on capture tab, go to capture
+          if (activeTab !== 'capture') {
+            setActiveTab('capture');
+            return;
+          }
+
+          // If on capture tab and main view, exit app
+          CapacitorApp.exitApp();
+        });
+      } catch (error) {
+        // Capacitor not available (web context)
+        console.log('Capacitor back button not available');
+      }
+    };
+
+    setupBackHandler();
+
+    return () => {
+      if (backButtonListener) {
+        backButtonListener.remove();
+      }
+    };
+  }, [currentView, activeTab, capturedImage]);
+
   const renderActiveView = () => {
-    // Handle overlay views first
-    if (currentView === 'notes') {
-      return <NotesView onBack={() => setCurrentView('main')} />;
+    // Handle notes tab from footer
+    if (activeTab === 'notes') {
+      return <NotesView onBack={() => setActiveTab('capture')} />;
     }
 
+    // Handle overlay views
     if (currentView === 'goals') {
       return (
         <Dashboard 
@@ -61,7 +117,7 @@ const MainApp = () => {
         return (
           <CameraView 
             onOpenGoals={() => setCurrentView('goals')}
-            onOpenNotes={() => setCurrentView('notes')}
+            onOpenNotes={() => setActiveTab('notes')}
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
             onCloseCapture={() => setCapturedImage(null)}
@@ -77,7 +133,7 @@ const MainApp = () => {
         return (
           <CameraView 
             onOpenGoals={() => setCurrentView('goals')}
-            onOpenNotes={() => setCurrentView('notes')}
+            onOpenNotes={() => setActiveTab('notes')}
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
             onCloseCapture={() => setCapturedImage(null)}
@@ -137,7 +193,6 @@ const MainApp = () => {
           onTagCapture={() => setShowTagDialog(true)}
           onCloseCapture={() => setCapturedImage(null)}
         />
-      )
       <TagGoalDialog 
         open={showTagDialog}
         onOpenChange={setShowTagDialog}
