@@ -267,7 +267,7 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="flex-1" disabled={isPastDate}>
+          <Button onClick={handleSubmit} className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isPastDate}>
             Add Task
           </Button>
         </div>

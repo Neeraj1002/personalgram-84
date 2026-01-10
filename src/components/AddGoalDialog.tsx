@@ -164,7 +164,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
             </Button>
             <Button 
               type="submit"
-              className="flex-1 bg-companion-green hover:bg-companion-green-dark text-white"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Add Goal
             </Button>

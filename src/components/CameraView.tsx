@@ -453,25 +453,6 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
               onClick={capturePhoto}
               className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0"
             />
-            
-            {/* Right side - Notes and Goals dashboard */}
-            <button
-              onClick={onOpenNotes}
-              className="w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-            >
-              <StickyNote className="h-5 w-5 text-white" />
-            </button>
-            <button
-              onClick={onOpenGoals}
-              className="relative w-11 h-11 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0"
-            >
-              <ListChecks className="h-5 w-5 text-white" />
-              {hasOverdueGoals && (
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-companion-peach flex items-center justify-center">
-                  <Timer className="h-3 w-3 text-white" />
-                </div>
-              )}
-            </button>
           </div>
         </div>
       )}
