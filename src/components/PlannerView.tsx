@@ -421,12 +421,12 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
             </div>
 
             {/* Week Navigation */}
-            <div className="flex items-center justify-between bg-muted/30 rounded-xl p-2">
+            <div className="flex items-center gap-2 bg-muted/30 rounded-xl p-2">
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={goToPreviousWeek}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground flex-shrink-0"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
@@ -468,7 +468,7 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                 size="icon" 
                 onClick={goToNextWeek}
                 disabled={isCurrentWeek}
-                className={`text-muted-foreground hover:text-foreground ${isCurrentWeek ? 'opacity-30' : ''}`}
+                className={`text-muted-foreground hover:text-foreground flex-shrink-0 ${isCurrentWeek ? 'opacity-30' : ''}`}
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>

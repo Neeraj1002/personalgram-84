@@ -44,16 +44,16 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
 
   // Normal navigation - 4 tabs now (Schedule includes Goals & Notes)
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary backdrop-blur-md border-t border-primary/20">
-      <div className="flex items-center justify-around py-2 px-4 safe-area-pb">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary border-t border-primary/20">
+      <div className="flex items-center justify-around py-1 px-2 safe-area-pb">
         <Button
           variant="ghost"
-          size="lg"
+          size="sm"
           onClick={() => onTabChange('schedule')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
             activeTab === 'schedule' 
               ? 'text-accent' 
-              : 'text-primary-foreground/70 hover:text-primary-foreground'
+              : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
           <CalendarDays className="h-5 w-5" />
@@ -62,12 +62,12 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
 
         <Button
           variant="ghost"
-          size="lg"
+          size="sm"
           onClick={() => onTabChange('bestie')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
             activeTab === 'bestie' 
               ? 'text-accent' 
-              : 'text-primary-foreground/70 hover:text-primary-foreground'
+              : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
           <MessageCircle className="h-5 w-5" />
@@ -76,12 +76,12 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
 
         <Button
           variant="ghost"
-          size="lg"
+          size="sm"
           onClick={() => onTabChange('capture')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
             activeTab === 'capture' 
               ? 'text-accent' 
-              : 'text-primary-foreground/70 hover:text-primary-foreground'
+              : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
           <Camera className="h-5 w-5" />
@@ -90,12 +90,12 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
 
         <Button
           variant="ghost"
-          size="lg"
+          size="sm"
           onClick={() => onTabChange('memories')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
             activeTab === 'memories' 
               ? 'text-accent' 
-              : 'text-primary-foreground/70 hover:text-primary-foreground'
+              : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
           <Heart className="h-5 w-5" />

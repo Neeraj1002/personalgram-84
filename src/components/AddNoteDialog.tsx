@@ -79,7 +79,7 @@ export const AddNoteDialog = ({ open, onOpenChange, onAdd }: AddNoteDialogProps)
             </Button>
             <Button 
               type="submit"
-              className="flex-1 bg-companion-peach hover:bg-accent text-accent-foreground"
+              className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
             >
               Add Note
             </Button>
