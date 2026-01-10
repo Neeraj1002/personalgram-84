@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Camera, Heart, Save, Tag, CalendarDays, StickyNote } from 'lucide-react';
+import { MessageCircle, Camera, Heart, Save, Tag, CalendarDays } from 'lucide-react';
 
 interface BottomNavigationProps {
-  activeTab: 'schedule' | 'bestie' | 'capture' | 'memories' | 'notes';
-  onTabChange: (tab: 'schedule' | 'bestie' | 'capture' | 'memories' | 'notes') => void;
+  activeTab: 'schedule' | 'bestie' | 'capture' | 'memories';
+  onTabChange: (tab: 'schedule' | 'bestie' | 'capture' | 'memories') => void;
   capturedImage?: { dataUrl: string; blob: Blob } | null;
   onSaveCapture?: () => void;
   onTagCapture?: () => void;
@@ -42,7 +42,7 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
     );
   }
 
-  // Normal navigation
+  // Normal navigation - 4 tabs now (Schedule includes Goals & Notes)
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary backdrop-blur-md border-t border-primary/20">
       <div className="flex items-center justify-around py-2 px-4 safe-area-pb">
@@ -50,21 +50,21 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('schedule')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-2 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
             activeTab === 'schedule' 
               ? 'text-accent' 
               : 'text-primary-foreground/70 hover:text-primary-foreground'
           }`}
         >
           <CalendarDays className="h-5 w-5" />
-          <span className="text-[10px]">Schedule</span>
+          <span className="text-[10px]">Planner</span>
         </Button>
 
         <Button
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('bestie')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-2 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
             activeTab === 'bestie' 
               ? 'text-accent' 
               : 'text-primary-foreground/70 hover:text-primary-foreground'
@@ -78,7 +78,7 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
           variant="ghost"
           size="lg"
           onClick={() => onTabChange('capture')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-2 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
             activeTab === 'capture' 
               ? 'text-accent' 
               : 'text-primary-foreground/70 hover:text-primary-foreground'
@@ -91,22 +91,8 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
         <Button
           variant="ghost"
           size="lg"
-          onClick={() => onTabChange('notes')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-2 focus:outline-none focus-visible:outline-none ${
-            activeTab === 'notes' 
-              ? 'text-accent' 
-              : 'text-primary-foreground/70 hover:text-primary-foreground'
-          }`}
-        >
-          <StickyNote className="h-5 w-5" />
-          <span className="text-[10px]">Notes</span>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="lg"
           onClick={() => onTabChange('memories')}
-          className={`flex flex-col items-center gap-1 h-auto py-2 px-2 focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-1 h-auto py-2 px-4 focus:outline-none focus-visible:outline-none ${
             activeTab === 'memories' 
               ? 'text-accent' 
               : 'text-primary-foreground/70 hover:text-primary-foreground'
