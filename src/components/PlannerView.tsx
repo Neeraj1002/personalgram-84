@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Clock, Trash2, CheckCircle, Pencil, Target, PenTool, CalendarDays } from 'lucide-react';
-import { format, addDays, isSameDay, isToday, isBefore, startOfDay, subWeeks, addYears } from 'date-fns';
+import { format, addDays, isSameDay, isToday, isBefore, startOfDay, subWeeks, addYears, startOfWeek } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -214,11 +214,15 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   };
 
   // Schedule helpers
-  // Generate 21 days centered around current date for scrollable view
+  // Generate 21 days starting from Sunday of the week before current date
   const weekDays = useMemo(() => {
-    const start = addDays(currentDate, -7);
+    const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday
+    const start = addDays(weekStart, -7);
     return Array.from({ length: 21 }, (_, i) => addDays(start, i));
   }, [currentDate]);
+  
+  // State for controlling calendar popover
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Get dates that have tasks for calendar highlighting
   const datesWithTasks = useMemo(() => {
@@ -433,7 +437,7 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
               <h1 className="text-2xl font-bold text-foreground">
                 {format(currentDate, 'MMMM yyyy')}
               </h1>
-              <Popover>
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-muted-foreground">
                     <CalendarDays className="h-5 w-5" />
@@ -447,6 +451,7 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                       if (date) {
                         setSelectedDate(date);
                         setCurrentDate(date);
+                        setIsCalendarOpen(false);
                         // Only open add task if selecting a future date without existing tasks
                         const dateStr = date.toISOString().split('T')[0];
                         if (!isBefore(startOfDay(date), startOfDay(new Date())) && !datesWithTasks.has(dateStr)) {
@@ -484,15 +489,13 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                     className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all min-w-[48px] flex-shrink-0 ${
                       isSelected 
                         ? 'bg-accent text-accent-foreground' 
-                        : isTodayDate
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-muted-foreground hover:bg-muted'
+                        : 'text-muted-foreground hover:bg-muted'
                     }`}
                   >
-                    <span className="text-[10px] font-medium mb-1">
+                    <span className={`text-[10px] font-medium mb-1 ${isTodayDate && !isSelected ? 'text-primary font-bold' : ''}`}>
                       {format(day, 'EEE')}
                     </span>
-                    <span className={`text-lg font-bold`}>
+                    <span className={`text-lg font-bold ${isTodayDate && !isSelected ? 'text-primary' : ''}`}>
                       {format(day, 'd')}
                     </span>
                     <div className={`w-1.5 h-1.5 rounded-full mt-1 ${
