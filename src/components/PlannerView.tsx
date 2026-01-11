@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ChevronLeft, ChevronRight, Plus, Clock, Trash2, CheckCircle, Pencil, Target, PenTool, CalendarDays, Settings, Calendar } from 'lucide-react';
-import { format, startOfWeek, addDays, isSameDay, isToday, isBefore, startOfDay, subWeeks } from 'date-fns';
+import { Plus, Clock, Trash2, CheckCircle, Pencil, Target, PenTool, CalendarDays } from 'lucide-react';
+import { format, addDays, isSameDay, isToday, isBefore, startOfDay, subWeeks, addYears } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import { Goal, Note } from './Dashboard';
 import { GoalCard } from './GoalCard';
 import { NoteCard } from './NoteCard';
@@ -211,17 +214,12 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   };
 
   // Schedule helpers
+  // Generate 14 days centered around current date for scrollable view
   const weekDays = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 0 });
-    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+    const start = addDays(currentDate, -7);
+    return Array.from({ length: 21 }, (_, i) => addDays(start, i));
   }, [currentDate]);
 
-  const isCurrentWeek = useMemo(() => {
-    const today = new Date();
-    const start = startOfWeek(currentDate, { weekStartsOn: 0 });
-    const end = addDays(start, 6);
-    return today >= start && today <= end;
-  }, [currentDate]);
 
   const isGoalCompletedForDate = (goal: Goal, date: Date) => {
     return goal.completedDates.some(completedDate => {
@@ -269,8 +267,14 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
     });
   }, [goals, tasks, selectedDate]);
 
-  const goToPreviousWeek = () => setCurrentDate(prev => addDays(prev, -7));
-  const goToNextWeek = () => { if (!isCurrentWeek) setCurrentDate(prev => addDays(prev, 7)); };
+  // Auto-scroll to selected date when it changes
+  useEffect(() => {
+    // Update currentDate to keep the selected date in view
+    const diffDays = Math.floor((selectedDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (Math.abs(diffDays) > 7) {
+      setCurrentDate(selectedDate);
+    }
+  }, [selectedDate]);
 
   const getTimeDisplay = (time?: string) => {
     if (!time) return null;
@@ -410,68 +414,67 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
               <h1 className="text-2xl font-bold text-foreground">
                 {format(currentDate, 'MMMM yyyy')}
               </h1>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="text-muted-foreground">
-                  <CalendarDays className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="text-muted-foreground">
-                  <Settings className="h-5 w-5" />
-                </Button>
-              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground">
+                    <CalendarDays className="h-5 w-5" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => {
+                      if (date) {
+                        setSelectedDate(date);
+                        setCurrentDate(date);
+                        // Only open add task if selecting a future date
+                        if (!isBefore(startOfDay(date), startOfDay(new Date()))) {
+                          setShowAddTask(true);
+                        }
+                      }
+                    }}
+                    disabled={(date) => isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
-            {/* Week Navigation */}
-            <div className="flex items-center gap-2 bg-muted/30 rounded-xl p-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={goToPreviousWeek}
-                className="text-muted-foreground hover:text-foreground flex-shrink-0"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </Button>
-              
-              <div className="flex gap-1 flex-1 justify-center">
-                {weekDays.map((day) => {
-                  const isSelected = isSameDay(day, selectedDate);
-                  const isTodayDate = isToday(day);
-                  const hasItems = scheduleItems.length > 0 && isSameDay(day, selectedDate);
-                  
-                  return (
-                    <button
-                      key={day.toISOString()}
-                      onClick={() => setSelectedDate(day)}
-                      className={`flex flex-col items-center py-2 px-2 rounded-xl transition-all min-w-[40px] ${
-                        isSelected 
-                          ? 'bg-accent text-accent-foreground' 
-                          : isTodayDate
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-muted-foreground hover:bg-muted'
-                      }`}
-                    >
-                      <span className="text-[10px] font-medium mb-1">
-                        {format(day, 'EEE')}
-                      </span>
-                      <span className={`text-lg font-bold`}>
-                        {format(day, 'd')}
-                      </span>
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1 ${
-                        isSelected ? 'bg-accent-foreground' : 'bg-transparent'
-                      }`} />
-                    </button>
-                  );
-                })}
-              </div>
-              
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={goToNextWeek}
-                disabled={isCurrentWeek}
-                className={`text-muted-foreground hover:text-foreground flex-shrink-0 ${isCurrentWeek ? 'opacity-30' : ''}`}
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
+            {/* Scrollable Dates */}
+            <div 
+              className="flex gap-1 overflow-x-auto scrollbar-hide pb-2 -mx-1 px-1"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {weekDays.map((day) => {
+                const isSelected = isSameDay(day, selectedDate);
+                const isTodayDate = isToday(day);
+                
+                return (
+                  <button
+                    key={day.toISOString()}
+                    onClick={() => setSelectedDate(day)}
+                    className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all min-w-[48px] flex-shrink-0 ${
+                      isSelected 
+                        ? 'bg-accent text-accent-foreground' 
+                        : isTodayDate
+                          ? 'bg-primary/10 text-primary'
+                          : 'text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <span className="text-[10px] font-medium mb-1">
+                      {format(day, 'EEE')}
+                    </span>
+                    <span className={`text-lg font-bold`}>
+                      {format(day, 'd')}
+                    </span>
+                    <div className={`w-1.5 h-1.5 rounded-full mt-1 ${
+                      isSelected ? 'bg-accent-foreground' : 'bg-transparent'
+                    }`} />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
