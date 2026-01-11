@@ -214,12 +214,20 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   };
 
   // Schedule helpers
-  // Generate 21 days starting from Sunday of the week before current date
+  // Generate 21 days starting from Sunday of the current week (7 days back, current week, 7 days forward)
   const weekDays = useMemo(() => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday
-    const start = addDays(weekStart, -7);
+    const today = new Date();
+    const currentWeekStart = startOfWeek(today, { weekStartsOn: 0 }); // Sunday of current week
+    const start = addDays(currentWeekStart, -7); // Start from previous week's Sunday
     return Array.from({ length: 21 }, (_, i) => addDays(start, i));
-  }, [currentDate]);
+  }, []);
+  
+  // Function to navigate back to today
+  const goToToday = () => {
+    const today = new Date();
+    setSelectedDate(today);
+    setCurrentDate(today);
+  };
   
   // State for controlling calendar popover
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -437,12 +445,23 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
               <h1 className="text-2xl font-bold text-foreground">
                 {format(currentDate, 'MMMM yyyy')}
               </h1>
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground">
-                    <CalendarDays className="h-5 w-5" />
+              <div className="flex items-center gap-1">
+                {!isToday(selectedDate) && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={goToToday}
+                    className="text-primary text-xs font-medium"
+                  >
+                    Today
                   </Button>
-                </PopoverTrigger>
+                )}
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground">
+                      <CalendarDays className="h-5 w-5" />
+                    </Button>
+                  </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="end">
                   <Calendar
                     mode="single"
@@ -470,7 +489,8 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                     className={cn("p-3 pointer-events-auto")}
                   />
                 </PopoverContent>
-              </Popover>
+                </Popover>
+              </div>
             </div>
 
             {/* Scrollable Dates */}
