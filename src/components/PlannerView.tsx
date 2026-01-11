@@ -214,11 +214,30 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   };
 
   // Schedule helpers
-  // Generate 14 days centered around current date for scrollable view
+  // Generate 21 days centered around current date for scrollable view
   const weekDays = useMemo(() => {
     const start = addDays(currentDate, -7);
     return Array.from({ length: 21 }, (_, i) => addDays(start, i));
   }, [currentDate]);
+
+  // Get dates that have tasks for calendar highlighting
+  const datesWithTasks = useMemo(() => {
+    const dateSet = new Set<string>();
+    tasks.forEach(task => {
+      dateSet.add(task.date);
+    });
+    // Also add goal days
+    goals.filter(g => g.isActive).forEach(goal => {
+      const today = new Date();
+      for (let i = 0; i < 365; i++) {
+        const checkDate = addDays(today, i);
+        if (goal.selectedDays.includes(checkDate.getDay())) {
+          dateSet.add(checkDate.toISOString().split('T')[0]);
+        }
+      }
+    });
+    return dateSet;
+  }, [tasks, goals]);
 
 
   const isGoalCompletedForDate = (goal: Goal, date: Date) => {
@@ -428,13 +447,20 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                       if (date) {
                         setSelectedDate(date);
                         setCurrentDate(date);
-                        // Only open add task if selecting a future date
-                        if (!isBefore(startOfDay(date), startOfDay(new Date()))) {
+                        // Only open add task if selecting a future date without existing tasks
+                        const dateStr = date.toISOString().split('T')[0];
+                        if (!isBefore(startOfDay(date), startOfDay(new Date())) && !datesWithTasks.has(dateStr)) {
                           setShowAddTask(true);
                         }
                       }
                     }}
                     disabled={(date) => isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)}
+                    modifiers={{
+                      hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0])
+                    }}
+                    modifiersClassNames={{
+                      hasTasks: "bg-accent/40 font-bold text-accent-foreground"
+                    }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
                   />
