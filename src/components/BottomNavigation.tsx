@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Camera, Heart, Save, Tag, CalendarDays } from 'lucide-react';
+import { MessageCircle, Camera, Heart, Save, Tag, CalendarDays, Plus } from 'lucide-react';
 
 interface BottomNavigationProps {
   activeTab: 'schedule' | 'bestie' | 'capture' | 'memories';
@@ -84,8 +84,12 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
               : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
-          <Camera className="h-5 w-5" />
-          <span className="text-[10px]">Capture</span>
+          {activeTab === 'capture' ? (
+            <Camera className="h-5 w-5" />
+          ) : (
+            <Plus className="h-5 w-5" />
+          )}
+          <span className="text-[10px]">{activeTab === 'capture' ? 'Capture' : 'Add'}</span>
         </Button>
 
         <Button
