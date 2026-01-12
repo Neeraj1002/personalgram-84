@@ -460,37 +460,40 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                       <CalendarDays className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    numberOfMonths={12}
-                    onSelect={(date) => {
-                      if (date) {
-                        setSelectedDate(date);
-                        setCurrentDate(date);
-                        setIsCalendarOpen(false);
-                        // Only open add task if selecting a future date without existing tasks
-                        const dateStr = date.toISOString().split('T')[0];
-                        if (!isBefore(startOfDay(date), startOfDay(new Date())) && !datesWithTasks.has(dateStr)) {
-                          setShowAddTask(true);
+                <PopoverContent className="w-[90vw] max-w-[340px] p-0 overflow-hidden" align="end">
+                  <div className="overflow-x-auto max-h-[350px]" style={{ scrollbarWidth: 'thin' }}>
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      numberOfMonths={12}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedDate(date);
+                          setCurrentDate(date);
+                          setIsCalendarOpen(false);
+                          // Only open add task if selecting a future date without existing tasks
+                          const dateStr = date.toISOString().split('T')[0];
+                          if (!isBefore(startOfDay(date), startOfDay(new Date())) && !datesWithTasks.has(dateStr)) {
+                            setShowAddTask(true);
+                          }
                         }
-                      }
-                    }}
-                    disabled={(date) => isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)}
-                    modifiers={{
-                      hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0]),
-                    }}
-                    modifiersClassNames={{
-                      hasTasks: "bg-accent/40 font-bold text-accent-foreground",
-                      nav: "hidden",
-                    }}
-                    classNames={{
-                      nav: "hidden",
-                    }}
-                    initialFocus
-                    className={cn("p-3 pointer-events-auto")}
-                  />
+                      }}
+                      disabled={(date) => isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)}
+                      modifiers={{
+                        hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0]),
+                      }}
+                      modifiersClassNames={{
+                        hasTasks: "bg-accent/40 font-bold text-accent-foreground",
+                      }}
+                      classNames={{
+                        nav: "hidden",
+                        months: "flex flex-row gap-4 overflow-x-auto snap-x snap-mandatory px-2",
+                        month: "space-y-4 snap-start min-w-[280px]",
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </div>
                 </PopoverContent>
                 </Popover>
               </div>
