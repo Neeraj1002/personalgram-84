@@ -18,9 +18,11 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3 pointer-events-auto", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
+        months:
+          "flex flex-row gap-4 overflow-x-auto snap-x snap-mandatory pr-2",
+        month: "space-y-4 snap-start",
         caption: "flex justify-center pt-1 relative items-center",
+
         caption_label: "text-sm font-medium",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
