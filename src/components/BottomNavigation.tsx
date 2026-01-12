@@ -8,9 +8,17 @@ interface BottomNavigationProps {
   onSaveCapture?: () => void;
   onTagCapture?: () => void;
   onCloseCapture?: () => void;
+  onAddPress?: () => void;
 }
 
-const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture, onTagCapture }: BottomNavigationProps) => {
+const BottomNavigation = ({
+  activeTab,
+  onTabChange,
+  capturedImage,
+  onSaveCapture,
+  onTagCapture,
+  onAddPress,
+}: BottomNavigationProps) => {
   // Show Save and Tag buttons when image is captured
   if (capturedImage) {
     return (
@@ -77,10 +85,16 @@ const BottomNavigation = ({ activeTab, onTabChange, capturedImage, onSaveCapture
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onTabChange('capture')}
+          onClick={() => {
+            if (activeTab === 'capture') {
+              onTabChange('capture');
+              return;
+            }
+            onAddPress?.();
+          }}
           className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
-            activeTab === 'capture' 
-              ? 'text-accent' 
+            activeTab === 'capture'
+              ? 'text-accent'
               : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
