@@ -214,13 +214,11 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   };
 
   // Schedule helpers
-  // Generate 21 days starting from Sunday of the current week (7 days back, current week, 7 days forward)
+  // Generate 21 days starting from Sunday of the week containing `currentDate`
   const weekDays = useMemo(() => {
-    const today = new Date();
-    const currentWeekStart = startOfWeek(today, { weekStartsOn: 0 }); // Sunday of current week
-    const start = addDays(currentWeekStart, -7); // Start from previous week's Sunday
+    const start = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday
     return Array.from({ length: 21 }, (_, i) => addDays(start, i));
-  }, []);
+  }, [currentDate]);
   
   // Function to navigate back to today
   const goToToday = () => {
@@ -466,6 +464,7 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                   <Calendar
                     mode="single"
                     selected={selectedDate}
+                    numberOfMonths={12}
                     onSelect={(date) => {
                       if (date) {
                         setSelectedDate(date);
@@ -480,10 +479,14 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                     }}
                     disabled={(date) => isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)}
                     modifiers={{
-                      hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0])
+                      hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0]),
                     }}
                     modifiersClassNames={{
-                      hasTasks: "bg-accent/40 font-bold text-accent-foreground"
+                      hasTasks: "bg-accent/40 font-bold text-accent-foreground",
+                      nav: "hidden",
+                    }}
+                    classNames={{
+                      nav: "hidden",
                     }}
                     initialFocus
                     className={cn("p-3 pointer-events-auto")}
@@ -506,21 +509,25 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                   <button
                     key={day.toISOString()}
                     onClick={() => setSelectedDate(day)}
-                    className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all min-w-[48px] flex-shrink-0 ${
-                      isSelected 
-                        ? 'bg-accent text-accent-foreground' 
-                        : 'text-muted-foreground hover:bg-muted'
-                    }`}
+                    className={cn(
+                      "flex flex-col items-center py-2 px-3 rounded-xl transition-all min-w-[48px] flex-shrink-0",
+                      isTodayDate
+                        ? "text-primary font-bold"
+                        : isSelected
+                          ? "bg-accent text-accent-foreground"
+                          : "text-muted-foreground hover:bg-muted"
+                    )}
                   >
-                    <span className={`text-[10px] font-medium mb-1 ${isTodayDate && !isSelected ? 'text-primary font-bold' : ''}`}>
+                    <span className={cn("text-[10px] font-medium mb-1", isTodayDate ? "text-primary" : "")}> 
                       {format(day, 'EEE')}
                     </span>
-                    <span className={`text-lg font-bold ${isTodayDate && !isSelected ? 'text-primary' : ''}`}>
+                    <span className={cn("text-lg font-bold", isTodayDate ? "text-primary" : "")}> 
                       {format(day, 'd')}
                     </span>
-                    <div className={`w-1.5 h-1.5 rounded-full mt-1 ${
-                      isSelected ? 'bg-accent-foreground' : 'bg-transparent'
-                    }`} />
+                    <div className={cn(
+                      "w-1.5 h-1.5 rounded-full mt-1",
+                      !isTodayDate && isSelected ? "bg-accent-foreground" : "bg-transparent"
+                    )} />
                   </button>
                 );
               })}
