@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plus, Clock, Trash2, CheckCircle, Pencil, Target, PenTool, CalendarDays } from 'lucide-react';
-import { format, addDays, isSameDay, isToday, isBefore, startOfDay, subWeeks, addYears, startOfWeek } from 'date-fns';
+import { format, addDays, isSameDay, isToday, isBefore, startOfDay, subYears, addYears, startOfWeek, addMonths } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -28,12 +28,18 @@ interface ScheduleItem {
 
 interface PlannerViewProps {
   onViewGoalDetail?: (goalId: string) => void;
+  addMenuRequest?: number;
 }
 
-const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
+const PlannerView = ({ onViewGoalDetail, addMenuRequest }: PlannerViewProps) => {
   const [activeTab, setActiveTab] = useState<'schedule' | 'goals' | 'notes'>('schedule');
   const [showFabMenu, setShowFabMenu] = useState(false);
-  
+
+  // Allow the footer “Add” button to open the same 3-option menu
+  useEffect(() => {
+    if (!addMenuRequest) return;
+    setShowFabMenu(true);
+  }, [addMenuRequest]);
   // Schedule state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -71,15 +77,15 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   useEffect(() => {
     const savedTasks = localStorage.getItem('bestie-schedule-tasks');
     if (savedTasks) {
-      const sixWeeksAgo = subWeeks(new Date(), 6);
+      const oneYearAgo = subYears(new Date(), 1);
       const parsedTasks = JSON.parse(savedTasks)
         .map((task: any) => ({
           ...task,
-          createdAt: new Date(task.createdAt)
+          createdAt: new Date(task.createdAt),
         }))
         .filter((task: ScheduleTask) => {
           const taskDate = new Date(task.date);
-          return taskDate >= sixWeeksAgo;
+          return taskDate >= oneYearAgo;
         });
       setTasks(parsedTasks);
       localStorage.setItem('bestie-schedule-tasks', JSON.stringify(parsedTasks));
@@ -159,7 +165,6 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
   };
 
   const openEditTask = (task: ScheduleTask) => {
-    if (isTaskPast(task)) return;
     setEditingTask(task);
     setShowEditTask(true);
   };
@@ -460,39 +465,44 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                       <CalendarDays className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
-                <PopoverContent className="w-[90vw] max-w-[340px] p-0 overflow-hidden" align="end">
+                <PopoverContent className="w-[90vw] max-w-[360px] p-0 overflow-hidden" align="end">
                   <div className="overflow-x-auto max-h-[350px]" style={{ scrollbarWidth: 'thin' }}>
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      numberOfMonths={12}
-                      onSelect={(date) => {
-                        if (date) {
-                          setSelectedDate(date);
-                          setCurrentDate(date);
-                          setIsCalendarOpen(false);
-                          // Only open add task if selecting a future date without existing tasks
-                          const dateStr = date.toISOString().split('T')[0];
-                          if (!isBefore(startOfDay(date), startOfDay(new Date())) && !datesWithTasks.has(dateStr)) {
-                            setShowAddTask(true);
+                    <div className="w-max">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        defaultMonth={addMonths(new Date(), -12)}
+                        numberOfMonths={24}
+                        onSelect={(date) => {
+                          if (date) {
+                            setSelectedDate(date);
+                            setCurrentDate(date);
+                            setIsCalendarOpen(false);
+                            // Only open add task if selecting a future date without existing tasks
+                            const dateStr = date.toISOString().split('T')[0];
+                            if (!isBefore(startOfDay(date), startOfDay(new Date())) && !datesWithTasks.has(dateStr)) {
+                              setShowAddTask(true);
+                            }
                           }
+                        }}
+                        disabled={(date) =>
+                          isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)
                         }
-                      }}
-                      disabled={(date) => isBefore(date, addYears(new Date(), -1)) || date > addYears(new Date(), 5)}
-                      modifiers={{
-                        hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0]),
-                      }}
-                      modifiersClassNames={{
-                        hasTasks: "bg-accent/40 font-bold text-accent-foreground",
-                      }}
-                      classNames={{
-                        nav: "hidden",
-                        months: "flex flex-row gap-4 overflow-x-auto snap-x snap-mandatory px-2",
-                        month: "space-y-4 snap-start min-w-[280px]",
-                      }}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
+                        modifiers={{
+                          hasTasks: (date) => datesWithTasks.has(date.toISOString().split('T')[0]),
+                        }}
+                        modifiersClassNames={{
+                          hasTasks: 'bg-accent/40 font-bold text-accent-foreground',
+                        }}
+                        classNames={{
+                          nav: 'hidden',
+                          months: 'flex flex-row gap-4 px-2',
+                          month: 'space-y-4 min-w-[280px]',
+                        }}
+                        initialFocus
+                        className={cn('p-3 pointer-events-auto')}
+                      />
+                    </div>
                   </div>
                 </PopoverContent>
                 </Popover>
@@ -548,8 +558,6 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
             ) : (
               <div className="space-y-3">
                 {scheduleItems.map((item, index) => {
-                  const isPast = item.taskData ? isTaskPast(item.taskData) : false;
-                  
                   return (
                     <div key={item.id} className="flex gap-3 items-stretch">
                       <div className="w-16 flex-shrink-0 flex items-center justify-end pr-2">
@@ -557,7 +565,7 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                           {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : ''}
                         </span>
                       </div>
-                      
+
                       <Card className={`flex-1 p-4 border-l-4 ${getItemColor(item, index)} ${item.isCompleted ? 'opacity-60' : ''}`}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -580,16 +588,14 @@ const PlannerView = ({ onViewGoalDetail }: PlannerViewProps) => {
                           <div className="flex items-center gap-1">
                             {item.type === 'task' && item.taskData && (
                               <>
-                                {!isPast && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => openEditTask(item.taskData!)}
-                                  >
-                                    <Pencil className="h-4 w-4 text-muted-foreground" />
-                                  </Button>
-                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => openEditTask(item.taskData!)}
+                                >
+                                  <Pencil className="h-4 w-4 text-muted-foreground" />
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"

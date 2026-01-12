@@ -15,6 +15,7 @@ const MainApp = () => {
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [showTagDialog, setShowTagDialog] = useState(false);
+  const [plannerAddMenuRequest, setPlannerAddMenuRequest] = useState(0);
 
   // Initialize notifications
   useNotifications();
@@ -80,7 +81,8 @@ const MainApp = () => {
     switch (activeTab) {
       case 'schedule':
         return (
-          <PlannerView 
+          <PlannerView
+            addMenuRequest={plannerAddMenuRequest}
             onViewGoalDetail={(goalId) => {
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
@@ -125,49 +127,57 @@ const MainApp = () => {
   return (
     <div className="relative safe-area-pt">
       {renderActiveView()}
-      <BottomNavigation 
-        activeTab={activeTab} 
+      <BottomNavigation
+        activeTab={activeTab}
         onTabChange={(tab) => {
           setCurrentView('main');
           setActiveTab(tab);
         }}
+        onAddPress={() => {
+          setCurrentView('main');
+          setActiveTab('schedule');
+          setPlannerAddMenuRequest((n) => n + 1);
+        }}
         capturedImage={capturedImage}
         onSaveCapture={() => {
-            if (capturedImage) {
-              const openDB = (): Promise<IDBDatabase> => {
-                return new Promise((resolve, reject) => {
-                  const request = indexedDB.open('BestiePhotos', 2);
-                  request.onerror = () => reject(request.error);
-                  request.onsuccess = () => resolve(request.result);
-                  request.onupgradeneeded = (event) => {
-                    const db = (event.target as IDBOpenDBRequest).result;
-                    if (db.objectStoreNames.contains('photos')) {
-                      db.deleteObjectStore('photos');
-                    }
-                    db.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
-                  };
-                });
-              };
+          if (capturedImage) {
+            const openDB = (): Promise<IDBDatabase> => {
+              return new Promise((resolve, reject) => {
+                const request = indexedDB.open('BestiePhotos', 2);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                request.onupgradeneeded = (event) => {
+                  const db = (event.target as IDBOpenDBRequest).result;
+                  if (db.objectStoreNames.contains('photos')) {
+                    db.deleteObjectStore('photos');
+                  }
+                  db.createObjectStore('photos', { keyPath: 'id', autoIncrement: true });
+                };
+              });
+            };
 
-              openDB().then(db => {
+            openDB()
+              .then((db) => {
                 const timestamp = Date.now();
                 const tx = db.transaction('photos', 'readwrite');
                 return tx.objectStore('photos').add({
                   id: timestamp,
                   blob: capturedImage.blob,
-                  timestamp: timestamp
+                  timestamp: timestamp,
                 });
-              }).then(() => {
+              })
+              .then(() => {
                 setCapturedImage(null);
                 setActiveTab('memories');
-              }).catch(err => {
+              })
+              .catch((err) => {
                 console.error('Failed to save photo:', err);
               });
-            }
-          }}
-          onTagCapture={() => setShowTagDialog(true)}
-          onCloseCapture={() => setCapturedImage(null)}
-        />
+          }
+        }}
+        onTagCapture={() => setShowTagDialog(true)}
+        onCloseCapture={() => setCapturedImage(null)}
+      />
       <TagGoalDialog 
         open={showTagDialog}
         onOpenChange={setShowTagDialog}
