@@ -22,7 +22,11 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
   const [input, setInput] = useState('');
   const [goal, setGoal] = useState<Goal | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
-  const { messages, sendMessage, isLoading, clearMessages } = useRealtimeChat();
+  
+  // Use goal-specific storage key for chat persistence
+  const { messages, sendMessage, isLoading, clearMessages } = useRealtimeChat({
+    storageKey: `bestie-goal-chat-${goalId}`
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

@@ -1,10 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type Message = { role: "user" | "assistant"; content: string };
 
-export const useRealtimeChat = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+interface UseRealtimeChatOptions {
+  storageKey?: string; // Optional key to persist chat in localStorage
+}
+
+export const useRealtimeChat = (options?: UseRealtimeChatOptions) => {
+  const { storageKey } = options || {};
+  
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // Load from localStorage if storageKey provided
+    if (storageKey) {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Persist to localStorage when messages change
+  useEffect(() => {
+    if (storageKey && messages.length > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    }
+  }, [messages, storageKey]);
 
   const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
@@ -114,7 +140,12 @@ export const useRealtimeChat = () => {
     }
   };
 
-  const clearMessages = () => setMessages([]);
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
 
   return { messages, sendMessage, isLoading, clearMessages };
 };

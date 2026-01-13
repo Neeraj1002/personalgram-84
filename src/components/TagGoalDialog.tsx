@@ -26,9 +26,30 @@ const TagGoalDialog = ({ open, onOpenChange, onSelectGoal }: TagGoalDialogProps)
   const goals: Goal[] = JSON.parse(localStorage.getItem('bestie-goals') || '[]');
   const activeGoals = goals.filter(g => g.isActive);
 
-  // Calculate day number for a goal (based on completed dates count + 1 for new photo)
+  // Calculate day number for a goal (based on unique completed days + 1 for today if not already completed)
   const getDayNumber = (goal: Goal): number => {
-    return (goal.completedDates?.length || 0) + 1;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check if already completed today
+    const completedToday = goal.completedDates?.some((date: string) => {
+      const completedDate = new Date(date);
+      completedDate.setHours(0, 0, 0, 0);
+      return completedDate.getTime() === today.getTime();
+    });
+    
+    // Count unique days completed
+    const uniqueDays = new Set(
+      (goal.completedDates || []).map((date: string) => {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+      })
+    );
+    
+    // If already completed today, show current day number (no increment)
+    // If not completed today, this will be the next day
+    return completedToday ? uniqueDays.size : uniqueDays.size + 1;
   };
 
   return (
