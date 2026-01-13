@@ -471,7 +471,7 @@ const PlannerView = ({ onViewGoalDetail, addMenuRequest }: PlannerViewProps) => 
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        defaultMonth={addMonths(new Date(), -12)}
+                        defaultMonth={new Date()}
                         numberOfMonths={24}
                         onSelect={(date) => {
                           if (date) {
