@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, MoreVertical, Edit, Trash2, Flame } from 'lucide-react';
+import { Check, MoreVertical, Edit, Trash2, Flame, MessageCircle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Goal } from './Dashboard';
 import { EditGoalDialog } from './EditGoalDialog';
@@ -12,10 +12,11 @@ interface GoalCardProps {
   onUpdate: (goalId: string, updates: Partial<Goal>) => void;
   onDelete: (goalId: string) => void;
   onViewDetail?: (goalId: string) => void;
+  onViewChat?: (goalId: string) => void;
   showStreak?: boolean;
 }
 
-export const GoalCard = ({ goal, onUpdate, onDelete, onViewDetail, showStreak = false }: GoalCardProps) => {
+export const GoalCard = ({ goal, onUpdate, onDelete, onViewDetail, onViewChat, showStreak = false }: GoalCardProps) => {
   const [isCompleting, setIsCompleting] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
 
@@ -105,7 +106,7 @@ export const GoalCard = ({ goal, onUpdate, onDelete, onViewDetail, showStreak = 
                 <div className="flex items-center gap-2">
                   <Badge 
                     variant="secondary" 
-                    className="bg-companion-cream-dark text-xs"
+                    className="bg-primary/10 text-primary text-xs"
                   >
                     {goal.selectedDays.length === 7 ? 'Daily' : `${goal.selectedDays.length} days/week`}
                   </Badge>
@@ -158,6 +159,13 @@ export const GoalCard = ({ goal, onUpdate, onDelete, onViewDetail, showStreak = 
                 }}>
                   <Edit className="h-4 w-4 mr-2" />
                   Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  onViewChat?.(goal.id);
+                }}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Chat with Bestie
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={(e) => {

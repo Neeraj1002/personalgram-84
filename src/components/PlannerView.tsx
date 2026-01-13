@@ -28,10 +28,11 @@ interface ScheduleItem {
 
 interface PlannerViewProps {
   onViewGoalDetail?: (goalId: string) => void;
+  onViewGoalChat?: (goalId: string) => void;
   addMenuRequest?: number;
 }
 
-const PlannerView = ({ onViewGoalDetail, addMenuRequest }: PlannerViewProps) => {
+const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: PlannerViewProps) => {
   const [activeTab, setActiveTab] = useState<'schedule' | 'goals' | 'notes'>('schedule');
   const [showFabMenu, setShowFabMenu] = useState(false);
 
@@ -686,6 +687,7 @@ const PlannerView = ({ onViewGoalDetail, addMenuRequest }: PlannerViewProps) => 
                   onUpdate={updateGoal}
                   onDelete={deleteGoal}
                   onViewDetail={onViewGoalDetail}
+                  onViewChat={onViewGoalChat}
                   showStreak
                 />
               ))

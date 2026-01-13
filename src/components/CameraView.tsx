@@ -77,7 +77,7 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
     const storedGoals = localStorage.getItem('bestie-goals');
     if (storedGoals) {
       const goals = JSON.parse(storedGoals);
-      const active = goals.filter((goal: any) => goal.state === 'active').slice(0, 3);
+      const active = goals.filter((goal: any) => goal.state === 'active').slice(0, 4);
       setActiveGoals(active);
     }
   };
@@ -434,25 +434,36 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
       {!capturedImage && (
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-center gap-3 p-4 pb-32 px-4">
-            {/* Left side - Goal buttons immediately to the left of capture */}
-            {activeGoals.length > 0 && (
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {activeGoals.map((goal, index) => (
-                  <GoalButton 
-                    key={goal.id || index} 
-                    goal={goal} 
-                    onClick={() => onViewGoalDetail?.(goal.id)} 
-                  />
-                ))}
-              </div>
-            )}
+          <div className="flex items-center justify-center p-4 pb-32 px-4">
+            {/* Left side - Goal buttons */}
+            <div className="flex items-center gap-2 flex-1 justify-end">
+              {activeGoals.slice(0, 2).map((goal, index) => (
+                <GoalButton 
+                  key={goal.id || index} 
+                  goal={goal} 
+                  onClick={() => onViewGoalDetail?.(goal.id)} 
+                />
+              ))}
+            </div>
             
-            {/* Center - Capture button */}
-            <button
-              onClick={capturePhoto}
-              className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg flex-shrink-0"
-            />
+            {/* Center - Capture button (always centered) */}
+            <div className="mx-4">
+              <button
+                onClick={capturePhoto}
+                className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
+              />
+            </div>
+
+            {/* Right side - Goal buttons */}
+            <div className="flex items-center gap-2 flex-1 justify-start">
+              {activeGoals.slice(2, 4).map((goal, index) => (
+                <GoalButton 
+                  key={goal.id || index} 
+                  goal={goal} 
+                  onClick={() => onViewGoalDetail?.(goal.id)} 
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}
