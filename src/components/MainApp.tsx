@@ -87,6 +87,10 @@ const MainApp = () => {
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
             }}
+            onViewGoalChat={(goalId) => {
+              setSelectedGoalId(goalId);
+              setCurrentView('goal-detail');
+            }}
           />
         );
       case 'bestie':

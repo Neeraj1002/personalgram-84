@@ -33,10 +33,11 @@ export interface Note {
 interface DashboardProps {
   onBack?: () => void;
   onViewGoalDetail?: (goalId: string) => void;
+  onViewGoalChat?: (goalId: string) => void;
   onNavigateToSchedule?: () => void;
 }
 
-const Dashboard = ({ onBack, onViewGoalDetail, onNavigateToSchedule }: DashboardProps) => {
+const Dashboard = ({ onBack, onViewGoalDetail, onViewGoalChat, onNavigateToSchedule }: DashboardProps) => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'active' | 'completed' | 'inactive'>('active');
@@ -86,7 +87,7 @@ const Dashboard = ({ onBack, onViewGoalDetail, onNavigateToSchedule }: Dashboard
 
   const addGoal = (goalData: Omit<Goal, 'id' | 'streak' | 'completedDates' | 'createdAt' | 'isActive' | 'state'>) => {
     const activeGoalsCount = goals.filter(g => g.isActive).length;
-    if (activeGoalsCount >= 3) {
+    if (activeGoalsCount >= 4) {
       return; // Don't add if already at limit
     }
     
@@ -240,8 +241,8 @@ const Dashboard = ({ onBack, onViewGoalDetail, onNavigateToSchedule }: Dashboard
               size="sm"
               onClick={() => {
                 const activeGoalsCount = goals.filter(g => g.isActive).length;
-                if (activeGoalsCount >= 3) {
-                  alert('You can only have 3 active goals at a time');
+                if (activeGoalsCount >= 4) {
+                  alert('You can only have 4 active goals at a time');
                   return;
                 }
                 setShowAddGoal(true);
@@ -330,15 +331,16 @@ const Dashboard = ({ onBack, onViewGoalDetail, onNavigateToSchedule }: Dashboard
                 onUpdate={updateGoal}
                 onDelete={deleteGoal}
                 onViewDetail={onViewGoalDetail}
+                onViewChat={onViewGoalChat}
                 showStreak
               />
             ))
           )}
         </div>
 
-        {goals.filter(g => g.isActive).length >= 3 && (
+        {goals.filter(g => g.isActive).length >= 4 && (
           <div className="mt-8 text-center py-6 border-t">
-            <p className="text-muted-foreground mb-2">You've reached your goal limit (3 active goals)</p>
+            <p className="text-muted-foreground mb-2">You've reached your goal limit (4 active goals)</p>
             <p className="text-sm text-muted-foreground">Complete or delete a goal to add new ones</p>
           </div>
         )}
