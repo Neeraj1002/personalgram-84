@@ -181,7 +181,7 @@ const MainApp = () => {
       <TagGoalDialog 
         open={showTagDialog}
         onOpenChange={setShowTagDialog}
-        onSelectGoal={(goalId) => {
+        onSelectGoal={(goalId, dayNumber) => {
           if (capturedImage) {
             const storedGoals = localStorage.getItem('bestie-goals');
             if (storedGoals) {
@@ -247,7 +247,8 @@ const MainApp = () => {
                 id: timestamp,
                 blob: capturedImage.blob,
                 timestamp: timestamp,
-                goalId: goalId
+                goalId: goalId,
+                dayNumber: dayNumber // Save the day number with the photo
               });
             }).then(() => {
               setCapturedImage(null);
