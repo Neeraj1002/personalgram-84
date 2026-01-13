@@ -87,10 +87,10 @@ const BottomNavigation = ({
           size="sm"
           onClick={() => {
             if (activeTab === 'capture') {
-              onTabChange('capture');
+              onAddPress?.();
               return;
             }
-            onAddPress?.();
+            onTabChange('capture');
           }}
           className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
             activeTab === 'capture'
@@ -99,11 +99,11 @@ const BottomNavigation = ({
           }`}
         >
           {activeTab === 'capture' ? (
-            <Camera className="h-5 w-5" />
-          ) : (
             <Plus className="h-5 w-5" />
+          ) : (
+            <Camera className="h-5 w-5" />
           )}
-          <span className="text-[10px]">{activeTab === 'capture' ? 'Capture' : 'Add'}</span>
+          <span className="text-[10px]">{activeTab === 'capture' ? 'Add' : 'Capture'}</span>
         </Button>
 
         <Button

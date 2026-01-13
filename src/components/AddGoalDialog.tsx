@@ -104,11 +104,7 @@ export const AddGoalDialog = ({ open, onOpenChange, onAdd }: AddGoalDialogProps)
                   variant={selectedDays.includes(index) ? "default" : "outline"}
                   size="sm"
                   onClick={() => toggleDay(index)}
-                  className={`w-10 h-10 p-0 ${
-                    selectedDays.includes(index) 
-                      ? 'bg-companion-green hover:bg-companion-green-dark text-white' 
-                      : 'border-companion-green-light hover:bg-companion-green-light'
-                  }`}
+                  className="w-10 h-10 p-0"
                 >
                   {day}
                 </Button>
