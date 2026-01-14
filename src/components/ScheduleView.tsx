@@ -391,49 +391,51 @@ const ScheduleView = () => {
                       item.isCompleted ? 'opacity-60' : ''
                     }`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            item.type === 'goal' 
-                              ? 'bg-teal-100 text-teal-700' 
-                              : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            {item.type === 'goal' ? '🎯 Goal' : '📋 Task'}
-                          </span>
-                          {isPast && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                              Past
+                    <div className="flex flex-col h-full">
+                      {/* Top section */}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              item.type === 'goal' 
+                                ? 'bg-teal-100 text-teal-700' 
+                                : 'bg-purple-100 text-purple-700'
+                            }`}>
+                              {item.type === 'goal' ? '🎯 Goal' : '📋 Task'}
                             </span>
+                            {isPast && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                                Past
+                              </span>
+                            )}
+                          </div>
+                          <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
+                            {getItemIcon(item)} {item.title}
+                          </h3>
+                          {item.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                          )}
+                          {item.type === 'goal' && item.goalData && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs text-muted-foreground">
+                                {item.goalData.completedDates.length}/{item.goalData.duration} days
+                              </span>
+                            </div>
                           )}
                         </div>
-                        <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
-                          {getItemIcon(item)} {item.title}
-                        </h3>
-                        {item.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                        )}
-                        {item.type === 'goal' && item.goalData && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-muted-foreground">
-                              {item.goalData.completedDates.length}/{item.goalData.duration} days
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {item.type === 'task' && item.taskData && (
-                          <>
-                            {!isPast && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => openEditTask(item.taskData!)}
-                              >
-                                <Pencil className="h-4 w-4 text-muted-foreground" />
-                              </Button>
-                            )}
+                        {/* Top right buttons - Edit and Complete with significant space */}
+                        <div className="flex items-center gap-6">
+                          {item.type === 'task' && item.taskData && !isPast && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => openEditTask(item.taskData!)}
+                            >
+                              <Pencil className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          )}
+                          {item.type === 'task' && item.taskData && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -451,26 +453,31 @@ const ScheduleView = () => {
                                   : 'text-muted-foreground/50'
                               }`} />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => deleteTask(item.taskData!.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </>
-                        )}
-                        {item.type === 'goal' && (
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                            item.isCompleted 
-                              ? 'bg-green-500 text-white' 
-                              : 'bg-muted'
-                          }`}>
-                            {item.isCompleted ? '✓' : ''}
-                          </div>
-                        )}
+                          )}
+                          {item.type === 'goal' && (
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              item.isCompleted 
+                                ? 'bg-green-500 text-white' 
+                                : 'bg-muted'
+                            }`}>
+                              {item.isCompleted ? '✓' : ''}
+                            </div>
+                          )}
+                        </div>
                       </div>
+                      {/* Bottom section - Delete button for tasks */}
+                      {item.type === 'task' && item.taskData && (
+                        <div className="flex justify-end mt-3">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteTask(item.taskData!.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </Card>
                 </div>
