@@ -38,8 +38,11 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
 
   // Allow the footer “Add” button to open the same 3-option menu
   useEffect(() => {
-    if (!addMenuRequest) return;
-    setShowFabMenu(true);
+    if (addMenuRequest === 0) {
+      setShowFabMenu(false);
+    } else if (addMenuRequest && addMenuRequest > 0) {
+      setShowFabMenu(true);
+    }
   }, [addMenuRequest]);
   // Schedule state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -567,7 +570,14 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                         </span>
                       </div>
 
-                      <Card className={`flex-1 p-4 border-l-4 ${getItemColor(item, index)} ${item.isCompleted ? 'opacity-60' : ''}`}>
+                      <Card 
+                        className={`flex-1 p-4 border-l-4 ${getItemColor(item, index)} ${item.isCompleted ? 'opacity-60' : ''} ${item.type === 'goal' ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                        onClick={() => {
+                          if (item.type === 'goal' && item.goalData) {
+                            onViewGoalChat?.(item.goalData.id);
+                          }
+                        }}
+                      >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
@@ -593,7 +603,10 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => openEditTask(item.taskData!)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openEditTask(item.taskData!);
+                                  }}
                                 >
                                   <Pencil className="h-4 w-4 text-muted-foreground" />
                                 </Button>
@@ -603,7 +616,10 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                                   className={`h-8 w-8 rounded-full ${
                                     item.isCompleted ? 'bg-green-100' : 'bg-muted'
                                   }`}
-                                  onClick={() => toggleTaskComplete(item.taskData!.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleTaskComplete(item.taskData!.id);
+                                  }}
                                 >
                                   <CheckCircle className={`h-5 w-5 ${
                                     item.isCompleted ? 'text-green-600 fill-green-500' : 'text-muted-foreground/50'
@@ -613,7 +629,10 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => deleteTask(item.taskData!.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTask(item.taskData!.id);
+                                  }}
                                 >
                                   <Trash2 className="h-4 w-4 text-destructive" />
                                 </Button>
