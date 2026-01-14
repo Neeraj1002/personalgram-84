@@ -128,15 +128,22 @@ const MainApp = () => {
     }
   };
 
+  // Close planner FAB menu when navigating away from schedule tab
+  const handleTabChange = (tab: 'schedule' | 'bestie' | 'capture' | 'memories') => {
+    setCurrentView('main');
+    // Reset the add menu request when leaving schedule to ensure FAB closes
+    if (tab !== 'schedule') {
+      setPlannerAddMenuRequest(0);
+    }
+    setActiveTab(tab);
+  };
+
   return (
     <div className="relative safe-area-pt">
       {renderActiveView()}
       <BottomNavigation
         activeTab={activeTab}
-        onTabChange={(tab) => {
-          setCurrentView('main');
-          setActiveTab(tab);
-        }}
+        onTabChange={handleTabChange}
         onAddPress={() => {
           setCurrentView('main');
           setActiveTab('schedule');

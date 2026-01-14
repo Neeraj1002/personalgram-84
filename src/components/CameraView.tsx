@@ -435,11 +435,11 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
         /* Camera capture and utility buttons */
         <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
           <div className="flex items-center justify-center p-4 pb-32 px-4">
-            {/* Left side - Goal buttons */}
+            {/* Left side - Goals at index 0 and 2 */}
             <div className="flex items-center gap-2 flex-1 justify-end">
-              {activeGoals.slice(0, 2).map((goal, index) => (
+              {activeGoals.filter((_, idx) => idx % 2 === 0).map((goal) => (
                 <GoalButton 
-                  key={goal.id || index} 
+                  key={goal.id} 
                   goal={goal} 
                   onClick={() => onViewGoalDetail?.(goal.id)} 
                 />
@@ -454,11 +454,11 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
               />
             </div>
 
-            {/* Right side - Goal buttons */}
+            {/* Right side - Goals at index 1 and 3 */}
             <div className="flex items-center gap-2 flex-1 justify-start">
-              {activeGoals.slice(2, 4).map((goal, index) => (
+              {activeGoals.filter((_, idx) => idx % 2 === 1).map((goal) => (
                 <GoalButton 
-                  key={goal.id || index} 
+                  key={goal.id} 
                   goal={goal} 
                   onClick={() => onViewGoalDetail?.(goal.id)} 
                 />

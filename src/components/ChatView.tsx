@@ -105,7 +105,8 @@ const ChatView = ({ onBack }: ChatViewProps) => {
             onKeyDown={handleKeyPress}
             placeholder="Say something..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus-visible:ring-companion-green"
+            className="flex-1 rounded-full bg-white border-gray-300 text-foreground placeholder:text-gray-500 focus-visible:ring-companion-green"
+            style={{ color: '#000' }}
           />
           <Button 
             size="icon" 
