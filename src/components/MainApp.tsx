@@ -4,15 +4,18 @@ import CameraView from './CameraView';
 import MemoriesView from './MemoriesView';
 import ChatView from './ChatView';
 import GoalDetailView from './GoalDetailView';
+import NoteDetailView from './NoteDetailView';
 import PlannerView from './PlannerView';
 import BottomNavigation from './BottomNavigation';
 import TagGoalDialog from './TagGoalDialog';
 import useNotifications from '@/hooks/useNotifications';
+import { Note } from './Dashboard';
 
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState<'schedule' | 'bestie' | 'capture' | 'memories'>('capture');
-  const [currentView, setCurrentView] = useState<'main' | 'goal-detail'>('main');
+  const [currentView, setCurrentView] = useState<'main' | 'goal-detail' | 'note-detail'>('main');
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [plannerAddMenuRequest, setPlannerAddMenuRequest] = useState(0);
@@ -36,7 +39,14 @@ const MainApp = () => {
           // Handle goal detail view
           if (currentView === 'goal-detail') {
             setCurrentView('main');
-            setActiveTab('schedule'); // Go back to schedule tab which has goals
+            setActiveTab('schedule');
+            return;
+          }
+
+          // Handle note detail view
+          if (currentView === 'note-detail') {
+            setCurrentView('main');
+            setActiveTab('schedule');
             return;
           }
 
@@ -77,6 +87,32 @@ const MainApp = () => {
       );
     }
 
+    // Handle note detail view
+    if (currentView === 'note-detail' && selectedNote) {
+      return (
+        <NoteDetailView 
+          note={selectedNote}
+          onBack={() => {
+            setCurrentView('main');
+            setActiveTab('schedule');
+          }}
+          onEdit={(note) => {
+            setCurrentView('main');
+            setActiveTab('schedule');
+          }}
+          onDelete={(noteId) => {
+            // Update localStorage
+            const savedNotes = localStorage.getItem('companion-notes');
+            if (savedNotes) {
+              const notes = JSON.parse(savedNotes);
+              const updatedNotes = notes.filter((n: Note) => n.id !== noteId);
+              localStorage.setItem('companion-notes', JSON.stringify(updatedNotes));
+            }
+          }}
+        />
+      );
+    }
+
     // Handle main tab views
     switch (activeTab) {
       case 'schedule':
@@ -90,6 +126,10 @@ const MainApp = () => {
             onViewGoalChat={(goalId) => {
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
+            }}
+            onViewNote={(note) => {
+              setSelectedNote(note);
+              setCurrentView('note-detail');
             }}
           />
         );

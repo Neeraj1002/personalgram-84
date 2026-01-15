@@ -9,9 +9,10 @@ interface NoteCardProps {
   onUpdate: (noteId: string, updates: Partial<Note>) => void;
   onDelete: (noteId: string) => void;
   onEdit: (note: Note) => void;
+  onView?: (note: Note) => void;
 }
 
-export const NoteCard = ({ note, onUpdate, onDelete, onEdit }: NoteCardProps) => {
+export const NoteCard = ({ note, onUpdate, onDelete, onEdit, onView }: NoteCardProps) => {
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
@@ -22,7 +23,10 @@ export const NoteCard = ({ note, onUpdate, onDelete, onEdit }: NoteCardProps) =>
   };
 
   return (
-    <Card className="border-0 bg-card hover:shadow-gentle transition-all duration-200">
+    <Card 
+      className="border-0 bg-card hover:shadow-gentle transition-all duration-200 cursor-pointer"
+      onClick={() => onView?.(note)}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -38,18 +42,24 @@ export const NoteCard = ({ note, onUpdate, onDelete, onEdit }: NoteCardProps) =>
           </div>
           
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="sm" className="h-8 w-8 ml-2">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(note)}>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onEdit(note);
+              }}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={() => onDelete(note.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(note.id);
+                }}
                 className="text-destructive"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
