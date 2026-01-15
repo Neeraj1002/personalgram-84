@@ -80,24 +80,24 @@ const MemoriesView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-companion-cream via-background to-companion-cream-dark pt-16 pb-24">
+    <div className="min-h-screen bg-background pt-16 pb-24">
       <div className="container mx-auto px-6 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-light text-foreground mb-2">
-            Your <span className="font-medium text-companion-peach">Memories</span>
+            Your <span className="font-medium text-primary">Memories</span>
           </h1>
           <p className="text-muted-foreground">
             Captured moments and reflections
           </p>
         </div>
 
-        <Card className="shadow-soft border-0 bg-card/80 backdrop-blur-sm">
-          <CardHeader>
+        <Card className="shadow-soft border-0 bg-card">
+          <CardHeader className="bg-accent/40 rounded-t-lg">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-companion-peach-light">
-                <Heart className="h-5 w-5 text-accent-foreground" />
+              <div className="p-2 rounded-full bg-primary/20">
+                <Heart className="h-5 w-5 text-primary" />
               </div>
-              <CardTitle className="text-xl font-medium">Recent Captures</CardTitle>
+              <CardTitle className="text-xl font-medium text-foreground">Recent Captures</CardTitle>
             </div>
           </CardHeader>
           <CardContent>

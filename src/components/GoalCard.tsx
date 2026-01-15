@@ -134,10 +134,10 @@ export const GoalCard = ({ goal, onUpdate, onDelete, onViewDetail, onViewChat, s
                   disabled={completed || isCompleting || !activeToday}
                   className={`h-8 w-8 rounded-full transition-all ${
                     completed 
-                      ? 'bg-companion-green text-white' 
+                      ? 'bg-primary text-primary-foreground' 
                       : !activeToday
                       ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                      : 'hover:bg-companion-green-light hover:text-companion-green-dark'
+                      : 'hover:bg-primary/20 hover:text-primary'
                   }`}
                   title={!activeToday ? 'Not scheduled for today' : completed ? 'Completed' : 'Mark as complete'}
                 >

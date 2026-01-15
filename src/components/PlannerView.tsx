@@ -578,27 +578,27 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                           }
                         }}
                       >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="text-lg">{getItemIcon(item)}</span>
-                              {item.taskData?.recurrence && item.taskData.recurrence !== 'none' && (
-                                <span className="text-xs">🔄</span>
+                        <div className="flex flex-col h-full">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg">{getItemIcon(item)}</span>
+                                {item.taskData?.recurrence && item.taskData.recurrence !== 'none' && (
+                                  <span className="text-xs">🔄</span>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-1">
+                                {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : 'No time set'}
+                              </p>
+                              <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
+                                {item.title}
+                              </h3>
+                              {item.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
                               )}
                             </div>
-                            <p className="text-xs text-muted-foreground mb-1">
-                              {item.scheduledTime ? getTimeDisplay(item.scheduledTime) : 'No time set'}
-                            </p>
-                            <h3 className={`font-semibold text-foreground ${item.isCompleted ? 'line-through' : ''}`}>
-                              {item.title}
-                            </h3>
-                            {item.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1">
                             {item.type === 'task' && item.taskData && (
-                              <>
+                              <div className="flex items-center gap-4">
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -614,7 +614,7 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                                   variant="ghost"
                                   size="icon"
                                   className={`h-8 w-8 rounded-full ${
-                                    item.isCompleted ? 'bg-green-100' : 'bg-muted'
+                                    item.isCompleted ? 'bg-primary' : 'bg-muted'
                                   }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -622,23 +622,27 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, addMenuRequest }: Plann
                                   }}
                                 >
                                   <CheckCircle className={`h-5 w-5 ${
-                                    item.isCompleted ? 'text-green-600 fill-green-500' : 'text-muted-foreground/50'
+                                    item.isCompleted ? 'text-primary-foreground' : 'text-muted-foreground/50'
                                   }`} />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTask(item.taskData!.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </>
+                              </div>
                             )}
                           </div>
+                          {item.type === 'task' && item.taskData && (
+                            <div className="flex justify-end mt-3">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteTask(item.taskData!.id);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </Card>
                     </div>
