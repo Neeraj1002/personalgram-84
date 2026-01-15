@@ -34,11 +34,11 @@ const ChatView = ({ onBack }: ChatViewProps) => {
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-companion-cream via-background to-companion-cream-dark flex flex-col">
+    <div className="h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 pt-12 bg-white/50 backdrop-blur-md border-b border-gray-200/20">
+      <div className="flex items-center justify-between p-4 pt-12 bg-accent/40 border-b border-primary/10">
         <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-6 w-6" />
+          <ArrowLeft className="h-6 w-6 text-primary" />
         </Button>
         <h1 className="text-lg font-medium text-foreground">Your Bestie</h1>
         <Button 
@@ -47,7 +47,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
           onClick={clearMessages}
           disabled={messages.length === 0}
         >
-          <Trash2 className="h-5 w-5" />
+          <Trash2 className="h-5 w-5 text-primary" />
         </Button>
       </div>
 
