@@ -34,29 +34,13 @@ const ChatView = ({ onBack }: ChatViewProps) => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 pt-12 bg-accent/40 border-b border-primary/10">
-        <Button variant="ghost" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-6 w-6 text-primary" />
-        </Button>
-        <h1 className="text-lg font-medium text-foreground">Your Bestie</h1>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={clearMessages}
-          disabled={messages.length === 0}
-        >
-          <Trash2 className="h-5 w-5 text-primary" />
-        </Button>
-      </div>
-
+    <div className="h-screen bg-background flex flex-col pt-12">
       {/* Chat Area */}
       <ScrollArea className="flex-1 p-4 pb-40" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
-              <div className="text-6xl mb-4">💚</div>
+              <div className="text-6xl mb-4">💙</div>
               <h2 className="text-2xl font-medium text-foreground mb-2">Hey there! I'm Bestie</h2>
               <p className="text-muted-foreground">
                 I'm here to listen, support, and chat about anything on your mind. What would you like to talk about today?
@@ -73,8 +57,8 @@ const ChatView = ({ onBack }: ChatViewProps) => {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                     msg.role === 'user'
-                      ? 'bg-companion-green text-foreground'
-                      : 'bg-white/80 text-foreground'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-card text-foreground'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -83,11 +67,11 @@ const ChatView = ({ onBack }: ChatViewProps) => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white/80 rounded-2xl px-4 py-3">
+                <div className="bg-card rounded-2xl px-4 py-3">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -97,7 +81,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 sticky bottom-24 z-40">
+      <div className="p-4 bg-card border-t border-border sticky bottom-24 z-40">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
@@ -105,14 +89,14 @@ const ChatView = ({ onBack }: ChatViewProps) => {
             onKeyDown={handleKeyPress}
             placeholder="Say something..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-white border-gray-300 text-foreground placeholder:text-gray-500 focus-visible:ring-companion-green"
+            className="flex-1 rounded-full bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
             style={{ color: '#000' }}
           />
           <Button 
             size="icon" 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white flex-shrink-0"
+            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>
