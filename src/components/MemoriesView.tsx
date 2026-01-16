@@ -7,6 +7,9 @@ interface Photo {
   id: number;
   url: string;
   timestamp: number;
+  goalId?: string;
+  goalName?: string;
+  dayNumber?: number;
 }
 
 const MemoriesView = () => {
@@ -20,6 +23,16 @@ const MemoriesView = () => {
 
   const loadPhotos = async () => {
     try {
+      // Load goals from localStorage for name lookup
+      const savedGoals = localStorage.getItem('bestie-goals');
+      const goalsMap: Record<string, string> = {};
+      if (savedGoals) {
+        const goals = JSON.parse(savedGoals);
+        goals.forEach((goal: any) => {
+          goalsMap[goal.id] = goal.title;
+        });
+      }
+
       const request = indexedDB.open('BestiePhotos', 2);
       
       request.onupgradeneeded = (event) => {
@@ -45,7 +58,10 @@ const MemoriesView = () => {
           const photoUrls = results.map((item: any) => ({
             id: item.id,
             url: URL.createObjectURL(item.blob),
-            timestamp: item.timestamp
+            timestamp: item.timestamp,
+            goalId: item.goalId,
+            goalName: item.goalId ? goalsMap[item.goalId] : undefined,
+            dayNumber: item.dayNumber
           }));
           setPhotos(photoUrls.reverse()); // Most recent first
         };

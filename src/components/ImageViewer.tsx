@@ -6,6 +6,9 @@ interface Photo {
   id: number;
   url: string;
   timestamp: number;
+  goalId?: string;
+  goalName?: string;
+  dayNumber?: number;
 }
 
 interface ImageViewerProps {
@@ -148,7 +151,11 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
               hour: '2-digit',
               minute: '2-digit'
             })}</p>
-            <p><span className="text-white/60">Photo ID:</span> {currentPhoto.id}</p>
+            {currentPhoto.goalName && currentPhoto.dayNumber ? (
+              <p><span className="text-white/60">Goal:</span> {currentPhoto.goalName} - Day {currentPhoto.dayNumber}</p>
+            ) : (
+              <p><span className="text-white/60">Tagged:</span> Quick capture</p>
+            )}
           </div>
         </div>
       )}

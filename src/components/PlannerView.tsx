@@ -110,6 +110,20 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, onViewNote, addMenuRequ
     }
   }, []);
 
+  // Listen for edit-note events from NoteDetailView
+  useEffect(() => {
+    const handleEditNote = (event: CustomEvent<Note>) => {
+      setActiveTab('notes');
+      setEditingNote(event.detail);
+      setShowEditNote(true);
+    };
+
+    window.addEventListener('edit-note', handleEditNote as EventListener);
+    return () => {
+      window.removeEventListener('edit-note', handleEditNote as EventListener);
+    };
+  }, []);
+
   // Save goals to localStorage
   useEffect(() => {
     if (goals.length > 0) {
