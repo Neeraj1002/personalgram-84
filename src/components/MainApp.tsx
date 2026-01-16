@@ -39,14 +39,14 @@ const MainApp = () => {
           // Handle goal detail view
           if (currentView === 'goal-detail') {
             setCurrentView('main');
-            setActiveTab('schedule');
+            // Stay on current tab, don't force to schedule
             return;
           }
 
           // Handle note detail view
           if (currentView === 'note-detail') {
             setCurrentView('main');
-            setActiveTab('schedule');
+            // Stay on current tab, don't force to schedule
             return;
           }
 
@@ -81,7 +81,7 @@ const MainApp = () => {
           goalId={selectedGoalId}
           onBack={() => {
             setCurrentView('main');
-            setActiveTab('schedule');
+            // Stay on goals tab when going back from goal detail
           }}
         />
       );
@@ -94,11 +94,17 @@ const MainApp = () => {
           note={selectedNote}
           onBack={() => {
             setCurrentView('main');
-            setActiveTab('schedule');
+            // Stay on notes tab when going back from note detail
           }}
           onEdit={(note) => {
+            // Go back to planner notes tab where edit dialog will be triggered
             setCurrentView('main');
             setActiveTab('schedule');
+            // Use a timeout to ensure the tab is switched before triggering edit
+            setTimeout(() => {
+              // Dispatch a custom event to trigger edit in PlannerView
+              window.dispatchEvent(new CustomEvent('edit-note', { detail: note }));
+            }, 100);
           }}
           onDelete={(noteId) => {
             // Update localStorage
