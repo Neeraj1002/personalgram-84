@@ -546,20 +546,22 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, onViewNote, addMenuRequ
                       isSelected
                         ? "bg-primary text-primary-foreground font-bold"
                         : isTodayDate
-                          ? "ring-2 ring-primary text-primary font-bold"
+                          ? "bg-muted text-foreground font-bold ring-2 ring-primary"
                           : "text-muted-foreground hover:bg-muted"
                     )}
                   >
-                    <span className={cn("text-[10px] font-medium mb-1", isTodayDate ? "text-primary" : "")}> 
+                    <span className="text-[10px] font-medium mb-1">
                       {format(day, 'EEE')}
                     </span>
-                    <span className={cn("text-lg font-bold", isTodayDate ? "text-primary" : "")}> 
+                    <span className="text-lg font-bold">
                       {format(day, 'd')}
                     </span>
-                    <div className={cn(
-                      "w-1.5 h-1.5 rounded-full mt-1",
-                      !isTodayDate && isSelected ? "bg-accent-foreground" : "bg-transparent"
-                    )} />
+                    <div
+                      className={cn(
+                        "w-1.5 h-1.5 rounded-full mt-1",
+                        isSelected ? "bg-accent-foreground" : isTodayDate ? "bg-primary" : "bg-transparent"
+                      )}
+                    />
                   </button>
                 );
               })}
