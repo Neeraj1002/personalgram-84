@@ -559,7 +559,7 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, onViewNote, addMenuRequ
                     <div
                       className={cn(
                         "w-1.5 h-1.5 rounded-full mt-1",
-                        isSelected ? "bg-accent-foreground" : isTodayDate ? "bg-primary" : "bg-transparent"
+                        isSelected ? "bg-primary-foreground" : isTodayDate ? "bg-primary" : "bg-transparent"
                       )}
                     />
                   </button>
