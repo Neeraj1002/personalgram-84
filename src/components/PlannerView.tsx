@@ -543,10 +543,10 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, onViewNote, addMenuRequ
                     onClick={() => setSelectedDate(day)}
                     className={cn(
                       "flex flex-col items-center py-2 px-3 rounded-xl transition-all min-w-[48px] flex-shrink-0",
-                      isTodayDate && !isSelected
-                        ? "bg-primary/20 text-primary font-bold ring-2 ring-primary"
-                        : isSelected
-                          ? "bg-primary text-primary-foreground font-bold"
+                      isSelected
+                        ? "bg-primary text-primary-foreground font-bold"
+                        : isTodayDate
+                          ? "ring-2 ring-primary text-primary font-bold"
                           : "text-muted-foreground hover:bg-muted"
                     )}
                   >
