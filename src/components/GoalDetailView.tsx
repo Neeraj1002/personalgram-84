@@ -74,8 +74,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
 
   const handleSend = async () => {
     if (!input.trim() || isLoading || !goal) return;
-    const contextMessage = `I'm working on my goal: "${goal.title}". ${goal.description ? goal.description : ''} Current streak: ${goal.streak} days. ${input}`;
-    await sendMessage(contextMessage);
+    await sendMessage(input);
     setInput('');
   };
 
@@ -157,7 +156,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
-              <div className="text-6xl mb-4">💚</div>
+              <div className="text-6xl mb-4">💙</div>
               <h2 className="text-2xl font-medium text-foreground mb-2">Let's talk about your goal!</h2>
               <p className="text-muted-foreground">
                 Share your progress, challenges, or ask for advice about "{goal.title}"
@@ -175,7 +174,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
                   className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                     msg.role === 'user'
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-white/80 text-foreground'
+                      : 'bg-card text-foreground'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -184,11 +183,11 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-white/80 rounded-2xl px-4 py-3">
+                <div className="bg-card rounded-2xl px-4 py-3">
                   <div className="flex gap-1">
-                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-companion-green rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -212,7 +211,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
             size="icon" 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="rounded-full bg-companion-green hover:bg-companion-green-dark text-white flex-shrink-0"
+            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>
