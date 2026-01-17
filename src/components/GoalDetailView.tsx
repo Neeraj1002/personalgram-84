@@ -174,7 +174,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-3 ${
                     msg.role === 'user'
-                      ? 'bg-companion-green text-white'
+                      ? 'bg-primary text-primary-foreground'
                       : 'bg-white/80 text-foreground'
                   }`}
                 >
