@@ -31,7 +31,7 @@ const BottomNavigation = ({
             className="flex flex-col items-center gap-1 h-auto py-3 px-6 text-primary-foreground hover:text-primary-foreground hover:bg-primary/80"
           >
             <Save className="h-6 w-6" />
-            <span className="text-xs">Save</span>
+            <span className="text-xs">Memory</span>
           </Button>
 
           <div className="w-20" />

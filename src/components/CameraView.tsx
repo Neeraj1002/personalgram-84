@@ -37,6 +37,10 @@ const GoalButton = ({ goal, onClick }: { goal: any, onClick?: () => void }) => {
   return (
     <button onClick={onClick} className="relative w-10 h-10 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center flex-shrink-0">
       <Target className="h-4 w-4 text-white" />
+      {/* Bottom - goal title truncated */}
+      <div className="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[8px] text-white bg-black/70 px-1.5 py-0.5 rounded-full max-w-[60px] truncate text-center whitespace-nowrap">
+        {goal.title}
+      </div>
       {/* Left top - streak count */}
       <div className="absolute -top-1 -left-1 text-[9px] bg-black/60 text-white rounded-full px-1 py-0.5 border border-white/30 min-w-[18px] text-center">
         {goal.streak || 0}
