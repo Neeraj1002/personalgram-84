@@ -38,9 +38,9 @@ const ChatView = ({ onBack }: ChatViewProps) => {
   };
 
   return (
-    <div className="h-screen bg-background flex flex-col pt-12">
+    <div className="h-screen bg-background flex flex-col pt-[env(safe-area-inset-top,12px)]">
       {/* Chat Area */}
-      <ScrollArea className="flex-1 p-4 pb-40" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4 pb-20" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
@@ -85,7 +85,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-card border-t border-border sticky bottom-24 z-40">
+      <div className="p-4 bg-card border-t border-border sticky bottom-16 z-40">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <Input
             value={input}

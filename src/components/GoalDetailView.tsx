@@ -109,7 +109,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
   return (
     <div className="h-screen bg-gradient-to-br from-companion-cream via-background to-companion-cream-dark flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 pt-12 bg-white/50 backdrop-blur-md border-b border-gray-200/20">
+      <div className="flex items-center justify-between p-4 pt-[env(safe-area-inset-top,12px)] bg-white/50 backdrop-blur-md border-b border-gray-200/20">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
@@ -156,7 +156,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
       )}
 
       {/* Chat Area */}
-      <ScrollArea className="flex-1 p-4 pb-40" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-4 pb-20" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
@@ -201,7 +201,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 sticky bottom-24 z-40">
+      <div className="p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 sticky bottom-16 z-40">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
