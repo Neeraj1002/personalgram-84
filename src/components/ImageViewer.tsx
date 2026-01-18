@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Trash2, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+interface TextOverlay {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  fontSize: number;
+}
+
 interface Photo {
   id: number;
   url: string;
@@ -9,6 +18,7 @@ interface Photo {
   goalId?: string;
   goalName?: string;
   dayNumber?: number;
+  textOverlays?: TextOverlay[];
 }
 
 interface ImageViewerProps {
@@ -174,13 +184,32 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
           </Button>
         )}
 
-        {/* Image */}
-        <div className="max-w-full max-h-full flex items-center justify-center">
+        {/* Image with text overlays */}
+        <div className="max-w-full max-h-full flex items-center justify-center relative">
           <img
             src={currentPhoto.url}
             alt={`Memory from ${new Date(currentPhoto.timestamp).toLocaleDateString()}`}
             className="max-w-full max-h-[70vh] object-contain rounded-lg"
           />
+          {/* Render text overlays */}
+          {currentPhoto.textOverlays?.map((overlay) => (
+            <div
+              key={overlay.id}
+              className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none"
+              style={{
+                left: `${overlay.x}%`,
+                top: `${overlay.y}%`,
+                color: overlay.color,
+                fontSize: `${overlay.fontSize}px`,
+                textShadow:
+                  overlay.color === '#000000'
+                    ? '0 0 4px rgba(255,255,255,0.8)'
+                    : '0 0 4px rgba(0,0,0,0.8)',
+              }}
+            >
+              <span className="font-bold whitespace-nowrap">{overlay.text}</span>
+            </div>
+          ))}
         </div>
 
         {/* Next Button (Desktop) */}

@@ -3,12 +3,22 @@ import { Button } from '@/components/ui/button';
 import { Camera, Target, AlertCircle, Tag, StickyNote, ListChecks, SwitchCamera, X, Save, Timer } from 'lucide-react';
 import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
+import PhotoTextOverlay from './PhotoTextOverlay';
+
+interface TextOverlay {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  fontSize: number;
+}
 
 interface CameraViewProps {
   onOpenNotes?: () => void;
   onOpenGoals?: () => void;
   onSaveMemory?: () => void;
-  onCapture?: (image: { dataUrl: string; blob: Blob }) => void;
+  onCapture?: (image: { dataUrl: string; blob: Blob; textOverlays?: TextOverlay[] }) => void;
   onCloseCapture?: () => void;
   onViewGoalDetail?: (goalId: string) => void;
 }
@@ -68,6 +78,8 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   const [hasOverdueGoals, setHasOverdueGoals] = useState(false);
   const [activeGoals, setActiveGoals] = useState<any[]>([]);
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([]);
+  const [isEditingText, setIsEditingText] = useState(false);
   
   // Auto-initialize camera on mount
   useEffect(() => {
@@ -246,8 +258,9 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
         setCapturedImage(dataUrl);
         setCapturedBlob(blob);
         setTaggingMode(false);
+        setTextOverlays([]);
         
-        onCapture?.({ dataUrl, blob });
+        onCapture?.({ dataUrl, blob, textOverlays: [] });
         return;
       }
       
@@ -271,10 +284,11 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
             setCapturedImage(dataUrl);
             setCapturedBlob(blob);
             setTaggingMode(false);
+            setTextOverlays([]);
             addDebug('📸 Photo captured!');
             
             // Notify parent component
-            onCapture?.({ dataUrl, blob });
+            onCapture?.({ dataUrl, blob, textOverlays: [] });
           }
         }, 'image/png');
       }
@@ -338,6 +352,8 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
     addDebug('❌ Discarding photo');
     setCapturedImage(null);
     setCapturedBlob(null);
+    setTextOverlays([]);
+    setIsEditingText(false);
     onCloseCapture?.();
     // Ensure camera continues running
     if (!streamRef.current && videoRef.current) {
@@ -395,9 +411,21 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
 
   return (
     <div className="h-screen bg-black relative overflow-hidden">
-      {/* Camera feed or captured image */}
+      {/* Camera feed or captured image with text overlay */}
       {capturedImage ? (
-        <img src={capturedImage} alt="Captured" className="w-full h-full object-contain bg-black" />
+        <PhotoTextOverlay
+          imageUrl={capturedImage}
+          overlays={textOverlays}
+          onOverlaysChange={(overlays) => {
+            setTextOverlays(overlays);
+            // Update parent with new overlays
+            if (capturedBlob) {
+              onCapture?.({ dataUrl: capturedImage, blob: capturedBlob, textOverlays: overlays });
+            }
+          }}
+          isEditing={isEditingText}
+          onEditingChange={setIsEditingText}
+        />
       ) : isNative ? (
         // Native: Show camera placeholder
         <div className="w-full h-full flex items-center justify-center bg-black">

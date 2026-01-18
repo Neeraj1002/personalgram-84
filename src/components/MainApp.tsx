@@ -17,7 +17,7 @@ const MainApp = () => {
   const [plannerTab, setPlannerTab] = useState<'schedule' | 'goals' | 'notes'>('schedule');
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
-  const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
+  const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob; textOverlays?: { id: string; text: string; x: number; y: number; color: string; fontSize: number }[] } | null>(null);
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [plannerAddMenuRequest, setPlannerAddMenuRequest] = useState(0);
 
@@ -286,6 +286,7 @@ const MainApp = () => {
                   id: timestamp,
                   blob: capturedImage.blob,
                   timestamp: timestamp,
+                  textOverlays: capturedImage.textOverlays || [],
                 });
               })
               .then(() => {
@@ -370,7 +371,8 @@ const MainApp = () => {
                 blob: capturedImage.blob,
                 timestamp: timestamp,
                 goalId: goalId,
-                dayNumber: dayNumber // Save the day number with the photo
+                dayNumber: dayNumber,
+                textOverlays: capturedImage.textOverlays || [],
               });
             }).then(() => {
               setCapturedImage(null);

@@ -3,6 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Calendar } from 'lucide-react';
 import { ImageViewer } from './ImageViewer';
 
+interface TextOverlay {
+  id: string;
+  text: string;
+  x: number;
+  y: number;
+  color: string;
+  fontSize: number;
+}
+
 interface Photo {
   id: number;
   url: string;
@@ -10,6 +19,7 @@ interface Photo {
   goalId?: string;
   goalName?: string;
   dayNumber?: number;
+  textOverlays?: TextOverlay[];
 }
 
 const MemoriesView = () => {
@@ -61,7 +71,8 @@ const MemoriesView = () => {
             timestamp: item.timestamp,
             goalId: item.goalId,
             goalName: item.goalId ? goalsMap[item.goalId] : undefined,
-            dayNumber: item.dayNumber
+            dayNumber: item.dayNumber,
+            textOverlays: item.textOverlays || [],
           }));
           setPhotos(photoUrls.reverse()); // Most recent first
         };
