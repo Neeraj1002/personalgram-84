@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import CameraView from './CameraView';
 import MemoriesView from './MemoriesView';
@@ -14,14 +14,92 @@ import { Note } from './Dashboard';
 const MainApp = () => {
   const [activeTab, setActiveTab] = useState<'schedule' | 'bestie' | 'capture' | 'memories'>('capture');
   const [currentView, setCurrentView] = useState<'main' | 'goal-detail' | 'note-detail'>('main');
+  const [plannerTab, setPlannerTab] = useState<'schedule' | 'goals' | 'notes'>('schedule');
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [capturedImage, setCapturedImage] = useState<{ dataUrl: string; blob: Blob } | null>(null);
   const [showTagDialog, setShowTagDialog] = useState(false);
   const [plannerAddMenuRequest, setPlannerAddMenuRequest] = useState(0);
 
+  // Simple in-app navigation stack so Android back goes to the actual previous screen.
+  type NavSnapshot = {
+    activeTab: 'schedule' | 'bestie' | 'capture' | 'memories';
+    currentView: 'main' | 'goal-detail' | 'note-detail';
+    plannerTab: 'schedule' | 'goals' | 'notes';
+    selectedGoalId: string | null;
+    selectedNote: Note | null;
+  };
+
+  const navStackRef = useRef<NavSnapshot[]>([]);
+
+  const getSnapshot = (): NavSnapshot => ({
+    activeTab,
+    currentView,
+    plannerTab,
+    selectedGoalId,
+    selectedNote,
+  });
+
+  const isSameSnapshot = (a: NavSnapshot, b: NavSnapshot) =>
+    a.activeTab === b.activeTab &&
+    a.currentView === b.currentView &&
+    a.plannerTab === b.plannerTab &&
+    a.selectedGoalId === b.selectedGoalId &&
+    a.selectedNote?.id === b.selectedNote?.id;
+
+  const pushSnapshot = (next: NavSnapshot) => {
+    const stack = navStackRef.current;
+    const last = stack[stack.length - 1];
+    if (!last || !isSameSnapshot(last, next)) {
+      stack.push(next);
+    }
+  };
+
+  const restoreSnapshot = (snap: NavSnapshot) => {
+    setActiveTab(snap.activeTab);
+    setCurrentView(snap.currentView);
+    setPlannerTab(snap.plannerTab);
+    setSelectedGoalId(snap.selectedGoalId);
+    setSelectedNote(snap.selectedNote);
+  };
+
+  const goBack = () => {
+    // Photo review flow is special (can't restore blob from history). Treat as the top-most modal.
+    if (capturedImage) {
+      setCapturedImage(null);
+      return;
+    }
+
+    const stack = navStackRef.current;
+
+    // If we don't have history, fall back to old behavior.
+    if (stack.length <= 1) {
+      CapacitorApp.exitApp();
+      return;
+    }
+
+    // Pop current snapshot, restore previous.
+    stack.pop();
+    const prev = stack[stack.length - 1];
+    if (prev) restoreSnapshot(prev);
+  };
+
   // Initialize notifications
   useNotifications();
+
+  // Bootstrap the nav stack with the initial state once.
+  useEffect(() => {
+    if (navStackRef.current.length === 0) {
+      navStackRef.current.push(getSnapshot());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Keep nav stack in sync with navigation state
+  useEffect(() => {
+    pushSnapshot(getSnapshot());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, currentView, plannerTab, selectedGoalId, selectedNote]);
 
   // Handle Android hardware back button
   useEffect(() => {
@@ -30,34 +108,7 @@ const MainApp = () => {
     const setupBackHandler = async () => {
       try {
         backButtonListener = await CapacitorApp.addListener('backButton', () => {
-          // Handle captured image first
-          if (capturedImage) {
-            setCapturedImage(null);
-            return;
-          }
-
-          // Handle goal detail view
-          if (currentView === 'goal-detail') {
-            setCurrentView('main');
-            // Stay on current tab, don't force to schedule
-            return;
-          }
-
-          // Handle note detail view
-          if (currentView === 'note-detail') {
-            setCurrentView('main');
-            // Stay on current tab, don't force to schedule
-            return;
-          }
-
-          // If not on capture tab, go to capture
-          if (activeTab !== 'capture') {
-            setActiveTab('capture');
-            return;
-          }
-
-          // If on capture tab and main view, exit app
-          CapacitorApp.exitApp();
+          goBack();
         });
       } catch (error) {
         console.log('Capacitor back button not available');
@@ -71,18 +122,15 @@ const MainApp = () => {
         backButtonListener.remove();
       }
     };
-  }, [currentView, activeTab, capturedImage]);
+  }, [capturedImage]);
 
   const renderActiveView = () => {
     // Handle goal detail view
     if (currentView === 'goal-detail' && selectedGoalId) {
       return (
-        <GoalDetailView 
+        <GoalDetailView
           goalId={selectedGoalId}
-          onBack={() => {
-            setCurrentView('main');
-            // Stay on goals tab when going back from goal detail
-          }}
+          onBack={goBack}
         />
       );
     }
@@ -90,14 +138,12 @@ const MainApp = () => {
     // Handle note detail view
     if (currentView === 'note-detail' && selectedNote) {
       return (
-        <NoteDetailView 
+        <NoteDetailView
           note={selectedNote}
-          onBack={() => {
-            setCurrentView('main');
-            // Stay on notes tab when going back from note detail
-          }}
+          onBack={goBack}
           onEdit={(note) => {
             // Go back to planner notes tab where edit dialog will be triggered
+            setPlannerTab('notes');
             setCurrentView('main');
             setActiveTab('schedule');
             // Use a timeout to ensure the tab is switched before triggering edit
@@ -125,31 +171,43 @@ const MainApp = () => {
         return (
           <PlannerView
             addMenuRequest={plannerAddMenuRequest}
+            activeTab={plannerTab}
+            onActiveTabChange={setPlannerTab}
             onViewGoalDetail={(goalId) => {
+              setPlannerTab('goals');
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
             }}
             onViewGoalChat={(goalId) => {
+              setPlannerTab('goals');
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
             }}
             onViewNote={(note) => {
+              setPlannerTab('notes');
               setSelectedNote(note);
               setCurrentView('note-detail');
             }}
           />
         );
       case 'bestie':
-        return <ChatView onBack={() => setActiveTab('capture')} />;
+        return <ChatView onBack={goBack} />;
       case 'capture':
         return (
-          <CameraView 
-            onOpenGoals={() => setActiveTab('schedule')}
-            onOpenNotes={() => setActiveTab('schedule')}
+          <CameraView
+            onOpenGoals={() => {
+              setPlannerTab('goals');
+              setActiveTab('schedule');
+            }}
+            onOpenNotes={() => {
+              setPlannerTab('notes');
+              setActiveTab('schedule');
+            }}
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
             onCloseCapture={() => setCapturedImage(null)}
             onViewGoalDetail={(goalId) => {
+              setPlannerTab('goals');
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
             }}
@@ -159,13 +217,20 @@ const MainApp = () => {
         return <MemoriesView />;
       default:
         return (
-          <CameraView 
-            onOpenGoals={() => setActiveTab('schedule')}
-            onOpenNotes={() => setActiveTab('schedule')}
+          <CameraView
+            onOpenGoals={() => {
+              setPlannerTab('goals');
+              setActiveTab('schedule');
+            }}
+            onOpenNotes={() => {
+              setPlannerTab('notes');
+              setActiveTab('schedule');
+            }}
             onSaveMemory={() => setActiveTab('memories')}
             onCapture={setCapturedImage}
             onCloseCapture={() => setCapturedImage(null)}
             onViewGoalDetail={(goalId) => {
+              setPlannerTab('goals');
               setSelectedGoalId(goalId);
               setCurrentView('goal-detail');
             }}

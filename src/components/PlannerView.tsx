@@ -31,10 +31,22 @@ interface PlannerViewProps {
   onViewGoalChat?: (goalId: string) => void;
   onViewNote?: (note: Note) => void;
   addMenuRequest?: number;
+  activeTab?: 'schedule' | 'goals' | 'notes';
+  onActiveTabChange?: (tab: 'schedule' | 'goals' | 'notes') => void;
 }
 
-const PlannerView = ({ onViewGoalDetail, onViewGoalChat, onViewNote, addMenuRequest }: PlannerViewProps) => {
-  const [activeTab, setActiveTab] = useState<'schedule' | 'goals' | 'notes'>('schedule');
+const PlannerView = ({
+  onViewGoalDetail,
+  onViewGoalChat,
+  onViewNote,
+  addMenuRequest,
+  activeTab: controlledActiveTab,
+  onActiveTabChange,
+}: PlannerViewProps) => {
+  const [uncontrolledTab, setUncontrolledTab] = useState<'schedule' | 'goals' | 'notes'>('schedule');
+  const activeTab = controlledActiveTab ?? uncontrolledTab;
+  const setActiveTab = onActiveTabChange ?? setUncontrolledTab;
+
   const [showFabMenu, setShowFabMenu] = useState(false);
 
   // Allow the footer “Add” button to open the same 3-option menu
@@ -122,7 +134,7 @@ const PlannerView = ({ onViewGoalDetail, onViewGoalChat, onViewNote, addMenuRequ
     return () => {
       window.removeEventListener('edit-note', handleEditNote as EventListener);
     };
-  }, []);
+  }, [setActiveTab]);
 
   // Save goals to localStorage
   useEffect(() => {
