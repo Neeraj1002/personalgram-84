@@ -148,3 +148,31 @@ All colors MUST be HSL.
     padding-right: env(safe-area-inset-right);
   }
 }
+
+/* Responsive footer height - scales with screen size */
+:root {
+  --footer-height: 56px;
+  --footer-total-height: calc(var(--footer-height) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-height: 600px) {
+  :root {
+    --footer-height: 48px;
+  }
+}
+
+@media (min-height: 800px) {
+  :root {
+    --footer-height: 60px;
+  }
+}
+
+/* Ensure content doesn't get hidden behind footer */
+.bottom-nav-offset {
+  padding-bottom: var(--footer-total-height);
+}
+
+/* Input above footer positioning */
+.input-above-footer {
+  bottom: var(--footer-total-height);
+}

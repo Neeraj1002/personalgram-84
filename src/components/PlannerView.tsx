@@ -433,13 +433,13 @@ const PlannerView = ({
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background" style={{ paddingBottom: 'calc(var(--footer-total-height) + 16px)' }}>
       {/* Header with Tabs */}
-      <div className="bg-muted/50 pt-2 px-4">
+      <div className="bg-muted/50 pt-[env(safe-area-inset-top,8px)] px-3 sm:px-4">
         <div className="flex bg-muted rounded-xl p-1 max-w-md mx-auto">
           <button
             onClick={() => setActiveTab('schedule')}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               activeTab === 'schedule' 
                 ? 'bg-primary text-primary-foreground shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -449,7 +449,7 @@ const PlannerView = ({
           </button>
           <button
             onClick={() => setActiveTab('goals')}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               activeTab === 'goals' 
                 ? 'bg-primary text-primary-foreground shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'
@@ -459,7 +459,7 @@ const PlannerView = ({
           </button>
           <button
             onClick={() => setActiveTab('notes')}
-            className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+            className={`flex-1 py-2 sm:py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all ${
               activeTab === 'notes' 
                 ? 'bg-primary text-primary-foreground shadow-sm' 
                 : 'text-muted-foreground hover:text-foreground'

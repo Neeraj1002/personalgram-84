@@ -40,7 +40,7 @@ const ChatView = ({ onBack }: ChatViewProps) => {
   return (
     <div className="h-screen bg-background flex flex-col pt-[env(safe-area-inset-top,12px)]">
       {/* Chat Area */}
-      <ScrollArea className="flex-1 p-4 pb-20" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef} style={{ paddingBottom: 'calc(var(--footer-total-height) + 70px)' }}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
@@ -85,22 +85,25 @@ const ChatView = ({ onBack }: ChatViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-card border-t border-border sticky bottom-16 z-40">
-        <div className="flex items-center gap-3 max-w-2xl mx-auto">
+      <div 
+        className="p-3 sm:p-4 bg-card border-t border-border fixed left-0 right-0 z-40"
+        style={{ bottom: 'var(--footer-total-height)' }}
+      >
+        <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Say something..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
+            className="flex-1 rounded-full bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary text-sm sm:text-base"
             style={{ color: '#000' }}
           />
           <Button 
             size="icon" 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
           >
             <Send className="h-4 w-4" />
           </Button>
