@@ -23,6 +23,7 @@ const EditScheduleTaskDialog = ({ open, onOpenChange, task, onTaskUpdated }: Edi
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
   const [isReminder, setIsReminder] = useState(true);
+  const [reminderMinutes, setReminderMinutes] = useState('60');
 
   const convertFrom24Hour = (time: string): { hour: string; minute: string; period: 'AM' | 'PM' } => {
     const [h, m] = time.split(':').map(Number);
@@ -55,6 +56,7 @@ const EditScheduleTaskDialog = ({ open, onOpenChange, task, onTaskUpdated }: Edi
       setMinute(m);
       setPeriod(p);
       setIsReminder(task.isReminder);
+      setReminderMinutes(task.reminderMinutes?.toString() || '60');
     }
   }, [task]);
 
@@ -74,6 +76,7 @@ const EditScheduleTaskDialog = ({ open, onOpenChange, task, onTaskUpdated }: Edi
       description: description.trim() || undefined,
       scheduledTime,
       isReminder,
+      reminderMinutes: isReminder ? parseInt(reminderMinutes, 10) : undefined,
     };
 
     onTaskUpdated(updatedTask);
@@ -153,7 +156,7 @@ const EditScheduleTaskDialog = ({ open, onOpenChange, task, onTaskUpdated }: Edi
             <div className="space-y-0.5">
               <Label htmlFor="edit-reminder">Set Reminder</Label>
               <p className="text-xs text-muted-foreground">
-                Get notified 1 hour before
+                Get notified before the task
               </p>
             </div>
             <Switch
@@ -162,6 +165,26 @@ const EditScheduleTaskDialog = ({ open, onOpenChange, task, onTaskUpdated }: Edi
               onCheckedChange={setIsReminder}
             />
           </div>
+
+          {isReminder && (
+            <div className="space-y-2">
+              <Label>Remind me before</Label>
+              <Select value={reminderMinutes} onValueChange={setReminderMinutes}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 minutes</SelectItem>
+                  <SelectItem value="10">10 minutes</SelectItem>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                  <SelectItem value="1440">1 day</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3">

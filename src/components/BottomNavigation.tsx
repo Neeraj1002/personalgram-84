@@ -58,28 +58,28 @@ const BottomNavigation = ({
           variant="ghost"
           size="sm"
           onClick={() => onTabChange('schedule')}
-          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none transition-none ${
             activeTab === 'schedule' 
-              ? 'text-accent' 
+              ? '!text-accent' 
               : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
-          <CalendarDays className="h-5 w-5" />
-          <span className="text-[10px]">Planner</span>
+          <CalendarDays className={`h-5 w-5 ${activeTab === 'schedule' ? 'text-accent' : ''}`} />
+          <span className={`text-[10px] ${activeTab === 'schedule' ? 'text-accent' : ''}`}>Planner</span>
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onTabChange('bestie')}
-          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none transition-none ${
             activeTab === 'bestie' 
-              ? 'text-accent' 
+              ? '!text-accent' 
               : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
-          <MessageCircle className="h-5 w-5" />
-          <span className="text-[10px]">Bestie</span>
+          <MessageCircle className={`h-5 w-5 ${activeTab === 'bestie' ? 'text-accent' : ''}`} />
+          <span className={`text-[10px] ${activeTab === 'bestie' ? 'text-accent' : ''}`}>Bestie</span>
         </Button>
 
         <Button
@@ -92,32 +92,32 @@ const BottomNavigation = ({
             }
             onTabChange('capture');
           }}
-          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none transition-none ${
             activeTab === 'capture'
-              ? 'text-accent'
+              ? '!text-accent'
               : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
           {activeTab === 'capture' ? (
-            <Plus className="h-5 w-5" />
+            <Plus className="h-5 w-5 text-accent" />
           ) : (
             <Camera className="h-5 w-5" />
           )}
-          <span className="text-[10px]">{activeTab === 'capture' ? 'Add' : 'Capture'}</span>
+          <span className={`text-[10px] ${activeTab === 'capture' ? 'text-accent' : ''}`}>{activeTab === 'capture' ? 'Add' : 'Capture'}</span>
         </Button>
 
         <Button
           variant="ghost"
           size="sm"
           onClick={() => onTabChange('memories')}
-          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none ${
+          className={`flex flex-col items-center gap-0.5 h-auto py-1.5 px-3 hover:bg-transparent focus:outline-none focus-visible:outline-none transition-none ${
             activeTab === 'memories' 
-              ? 'text-accent' 
+              ? '!text-accent' 
               : 'text-primary-foreground/60 hover:text-primary-foreground'
           }`}
         >
-          <Heart className="h-5 w-5" />
-          <span className="text-[10px]">Memories</span>
+          <Heart className={`h-5 w-5 ${activeTab === 'memories' ? 'text-accent' : ''}`} />
+          <span className={`text-[10px] ${activeTab === 'memories' ? 'text-accent' : ''}`}>Memories</span>
         </Button>
       </div>
     </div>

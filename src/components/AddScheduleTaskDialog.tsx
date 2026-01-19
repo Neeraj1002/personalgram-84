@@ -16,10 +16,12 @@ export interface ScheduleTask {
   scheduledTime: string;
   date: string; // ISO date string
   isReminder: boolean;
+  reminderMinutes?: number; // Minutes before task to remind
   isCompleted: boolean;
   createdAt: Date;
   recurrence?: 'none' | 'daily' | 'weekly';
   recurrenceEndDate?: string;
+  selectedWeekDays?: number[]; // 0=Sunday, 1=Monday, etc.
 }
 
 interface AddScheduleTaskDialogProps {
@@ -37,8 +39,10 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
   const [minute, setMinute] = useState('00');
   const [period, setPeriod] = useState<'AM' | 'PM'>('AM');
   const [isReminder, setIsReminder] = useState(true);
+  const [reminderMinutes, setReminderMinutes] = useState('60');
   const [recurrence, setRecurrence] = useState<'none' | 'daily' | 'weekly'>('none');
   const [recurrenceWeeks, setRecurrenceWeeks] = useState('4');
+  const [selectedWeekDays, setSelectedWeekDays] = useState<number[]>([selectedDate.getDay()]);
 
   // Check if selected date is in the past
   const isPastDate = isBefore(startOfDay(selectedDate), startOfDay(new Date()));
@@ -52,8 +56,10 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
       setMinute('00');
       setPeriod('AM');
       setIsReminder(true);
+      setReminderMinutes('60');
       setRecurrence('none');
       setRecurrenceWeeks('4');
+      setSelectedWeekDays([selectedDate.getDay()]);
     }
   }, [open, selectedDate]);
 
@@ -83,9 +89,11 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
       description: description.trim() || undefined,
       scheduledTime,
       isReminder,
+      reminderMinutes: isReminder ? parseInt(reminderMinutes, 10) : undefined,
       isCompleted: false,
       createdAt: new Date(),
       recurrence,
+      selectedWeekDays: recurrence === 'weekly' ? selectedWeekDays : undefined,
     };
 
     if (recurrence === 'none') {
@@ -100,24 +108,42 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
       // Create recurring tasks
       const tasks: ScheduleTask[] = [];
       const weeks = parseInt(recurrenceWeeks, 10);
-      const totalDays = recurrence === 'daily' ? weeks * 7 : weeks;
       
-      for (let i = 0; i < totalDays; i++) {
-        const taskDate = recurrence === 'daily' 
-          ? addDays(selectedDate, i) 
-          : addWeeks(selectedDate, i);
-        
-        // Skip past dates
-        if (isBefore(startOfDay(taskDate), startOfDay(new Date()))) continue;
-        
-        tasks.push({
-          ...baseTask,
-          id: `${Date.now()}-${i}`,
-          date: taskDate.toISOString().split('T')[0],
-          recurrenceEndDate: recurrence === 'daily' 
-            ? addDays(selectedDate, weeks * 7 - 1).toISOString().split('T')[0]
-            : addWeeks(selectedDate, weeks - 1).toISOString().split('T')[0],
-        });
+      if (recurrence === 'daily') {
+        const totalDays = weeks * 7;
+        for (let i = 0; i < totalDays; i++) {
+          const taskDate = addDays(selectedDate, i);
+          
+          // Skip past dates
+          if (isBefore(startOfDay(taskDate), startOfDay(new Date()))) continue;
+          
+          tasks.push({
+            ...baseTask,
+            id: `${Date.now()}-${i}`,
+            date: taskDate.toISOString().split('T')[0],
+            recurrenceEndDate: addDays(selectedDate, weeks * 7 - 1).toISOString().split('T')[0],
+          });
+        }
+      } else if (recurrence === 'weekly') {
+        // Weekly: create tasks for selected days across the duration
+        const totalDays = weeks * 7;
+        for (let i = 0; i < totalDays; i++) {
+          const taskDate = addDays(selectedDate, i);
+          const dayOfWeek = taskDate.getDay();
+          
+          // Only add if this day is selected
+          if (!selectedWeekDays.includes(dayOfWeek)) continue;
+          
+          // Skip past dates
+          if (isBefore(startOfDay(taskDate), startOfDay(new Date()))) continue;
+          
+          tasks.push({
+            ...baseTask,
+            id: `${Date.now()}-${i}`,
+            date: taskDate.toISOString().split('T')[0],
+            recurrenceEndDate: addDays(selectedDate, weeks * 7 - 1).toISOString().split('T')[0],
+          });
+        }
       }
       
       if (onMultipleTasksAdded && tasks.length > 0) {
@@ -135,6 +161,18 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
 
   const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
   const minutes = ['00', '15', '30', '45'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const toggleWeekDay = (day: number) => {
+    if (selectedWeekDays.includes(day)) {
+      // Don't allow removing the last day
+      if (selectedWeekDays.length > 1) {
+        setSelectedWeekDays(selectedWeekDays.filter(d => d !== day));
+      }
+    } else {
+      setSelectedWeekDays([...selectedWeekDays, day]);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -238,9 +276,31 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
               <p className="text-xs text-muted-foreground">
                 {recurrence === 'daily' 
                   ? `Creates ${parseInt(recurrenceWeeks) * 7} tasks over ${recurrenceWeeks} weeks`
-                  : `Creates ${recurrenceWeeks} weekly tasks`
+                  : `Creates tasks on selected days for ${recurrenceWeeks} weeks`
                 }
               </p>
+            </div>
+          )}
+
+          {recurrence === 'weekly' && (
+            <div className="space-y-2">
+              <Label>Select Days</Label>
+              <div className="flex gap-1 flex-wrap">
+                {dayNames.map((name, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => toggleWeekDay(index)}
+                    className={`w-10 h-10 rounded-full text-sm font-medium transition-colors ${
+                      selectedWeekDays.includes(index)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -248,7 +308,7 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
             <div className="space-y-0.5">
               <Label htmlFor="reminder">Set Reminder</Label>
               <p className="text-xs text-muted-foreground">
-                Get notified 1 hour before
+                Get notified before the task
               </p>
             </div>
             <Switch
@@ -257,6 +317,26 @@ const AddScheduleTaskDialog = ({ open, onOpenChange, selectedDate, onTaskAdded, 
               onCheckedChange={setIsReminder}
             />
           </div>
+
+          {isReminder && (
+            <div className="space-y-2">
+              <Label>Remind me before</Label>
+              <Select value={reminderMinutes} onValueChange={setReminderMinutes}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 minutes</SelectItem>
+                  <SelectItem value="10">10 minutes</SelectItem>
+                  <SelectItem value="15">15 minutes</SelectItem>
+                  <SelectItem value="30">30 minutes</SelectItem>
+                  <SelectItem value="60">1 hour</SelectItem>
+                  <SelectItem value="120">2 hours</SelectItem>
+                  <SelectItem value="1440">1 day</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3">
