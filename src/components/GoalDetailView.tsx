@@ -156,7 +156,7 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
       )}
 
       {/* Chat Area */}
-      <ScrollArea className="flex-1 p-4 pb-20" ref={scrollRef}>
+      <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollRef} style={{ paddingBottom: 'calc(var(--footer-total-height) + 70px)' }}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-md">
@@ -201,21 +201,24 @@ const GoalDetailView = ({ goalId, onBack }: GoalDetailViewProps) => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 sticky bottom-16 z-40">
-        <div className="flex items-center gap-3 max-w-2xl mx-auto">
+      <div 
+        className="p-3 sm:p-4 bg-white/90 backdrop-blur-md border-t border-gray-200 fixed left-0 right-0 z-40"
+        style={{ bottom: 'var(--footer-total-height)' }}
+      >
+        <div className="flex items-center gap-2 sm:gap-3 max-w-2xl mx-auto">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="Talk about your goal..."
             disabled={isLoading}
-            className="flex-1 rounded-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus-visible:ring-companion-green"
+            className="flex-1 rounded-full bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus-visible:ring-companion-green text-sm sm:text-base"
           />
           <Button 
             size="icon" 
             onClick={handleSend}
             disabled={!input.trim() || isLoading}
-            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0"
+            className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10"
           >
             <Send className="h-4 w-4" />
           </Button>

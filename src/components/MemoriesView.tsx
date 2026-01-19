@@ -107,13 +107,13 @@ const MemoriesView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pt-16 pb-24">
-      <div className="container mx-auto px-6 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-light text-foreground mb-2">
+    <div className="min-h-screen bg-background pt-[env(safe-area-inset-top,16px)]" style={{ paddingBottom: 'calc(var(--footer-total-height) + 16px)' }}>
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-light text-foreground mb-2">
             Your <span className="font-medium text-primary">Memories</span>
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Captured moments and reflections
           </p>
         </div>
@@ -135,7 +135,7 @@ const MemoriesView = () => {
                 <p className="text-sm">Start capturing moments to build your collection</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 xs:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-4">
                 {photos.map((photo, index) => (
                   <button
                     key={photo.id}

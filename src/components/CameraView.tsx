@@ -448,27 +448,29 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
         /* Close button at top left when photo is captured */
         <button
           onClick={handleClose}
-          className="absolute top-6 left-6 z-20 w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+          className="absolute z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+          style={{ top: 'calc(env(safe-area-inset-top, 12px) + 8px)', left: '16px' }}
         >
-          <X className="h-6 w-6 text-white" />
+          <X className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
         </button>
       ) : (
         /* Camera flip button at top right when camera is active */
         <button
           onClick={flipCamera}
-          className="absolute top-6 right-6 z-20 w-12 h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+          className="absolute z-20 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 border-2 border-white/30 hover:bg-white/30 transition-all backdrop-blur-sm flex items-center justify-center"
+          style={{ top: 'calc(env(safe-area-inset-top, 12px) + 8px)', right: '16px' }}
         >
-          <SwitchCamera className="h-6 w-6 text-white" />
+          <SwitchCamera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
         </button>
       )}
 
       {/* Bottom controls */}
       {!capturedImage && (
         /* Camera capture and utility buttons */
-        <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent">
-          <div className="flex items-center justify-center p-4 pb-32 px-4">
+        <div className="absolute left-0 right-0 z-10 bg-gradient-to-t from-black/50 to-transparent" style={{ bottom: 'var(--footer-total-height)' }}>
+          <div className="flex items-center justify-center p-3 sm:p-4 pb-4 sm:pb-6 px-2 sm:px-4">
             {/* Left side - Goals at index 0 and 2 */}
-            <div className="flex items-center gap-2 flex-1 justify-end">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-end">
               {activeGoals.filter((_, idx) => idx % 2 === 0).map((goal) => (
                 <GoalButton 
                   key={goal.id} 
@@ -479,15 +481,15 @@ const CameraView = ({ onOpenNotes, onOpenGoals, onSaveMemory, onCapture, onClose
             </div>
             
             {/* Center - Capture button (always centered) */}
-            <div className="mx-4">
+            <div className="mx-3 sm:mx-4">
               <button
                 onClick={capturePhoto}
-                className="w-16 h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white hover:scale-105 transition-transform active:scale-95 shadow-lg"
               />
             </div>
 
             {/* Right side - Goals at index 1 and 3 */}
-            <div className="flex items-center gap-2 flex-1 justify-start">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-1 justify-start">
               {activeGoals.filter((_, idx) => idx % 2 === 1).map((goal) => (
                 <GoalButton 
                   key={goal.id} 
