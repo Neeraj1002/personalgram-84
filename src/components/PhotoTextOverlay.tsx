@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Type, Check, X, Palette } from 'lucide-react';
 
-interface TextOverlay {
+export interface TextOverlay {
   id: string;
   text: string;
   x: number;
@@ -47,6 +47,7 @@ const PhotoTextOverlay = ({
   const [tapPosition, setTapPosition] = useState<{ x: number; y: number } | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [editingOverlayId, setEditingOverlayId] = useState<string | null>(null);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
@@ -82,16 +83,29 @@ const PhotoTextOverlay = ({
   const handleAddText = () => {
     if (!currentText.trim() || !tapPosition) return;
 
-    const newOverlay: TextOverlay = {
-      id: Date.now().toString(),
-      text: currentText,
-      x: tapPosition.x,
-      y: tapPosition.y,
-      color: selectedColor,
-      fontSize: 24,
-    };
+    if (editingOverlayId) {
+      // Update existing overlay
+      onOverlaysChange(
+        overlays.map((o) =>
+          o.id === editingOverlayId
+            ? { ...o, text: currentText, color: selectedColor }
+            : o
+        )
+      );
+      setEditingOverlayId(null);
+    } else {
+      // Add new overlay
+      const newOverlay: TextOverlay = {
+        id: Date.now().toString(),
+        text: currentText,
+        x: tapPosition.x,
+        y: tapPosition.y,
+        color: selectedColor,
+        fontSize: 24,
+      };
+      onOverlaysChange([...overlays, newOverlay]);
+    }
 
-    onOverlaysChange([...overlays, newOverlay]);
     setCurrentText('');
     setTapPosition(null);
     onEditingChange(false);
@@ -103,6 +117,15 @@ const PhotoTextOverlay = ({
     setTapPosition(null);
     onEditingChange(false);
     setShowColorPicker(false);
+    setEditingOverlayId(null);
+  };
+
+  const handleEditOverlay = (overlay: TextOverlay) => {
+    setEditingOverlayId(overlay.id);
+    setCurrentText(overlay.text);
+    setSelectedColor(overlay.color);
+    setTapPosition({ x: overlay.x, y: overlay.y });
+    onEditingChange(true);
   };
 
   const handleRemoveOverlay = (id: string) => {
@@ -207,6 +230,10 @@ const PhotoTextOverlay = ({
           }}
           onMouseDown={(e) => handleDragStart(e, overlay)}
           onTouchStart={(e) => handleDragStart(e, overlay)}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleEditOverlay(overlay);
+          }}
           onDoubleClick={() => handleRemoveOverlay(overlay.id)}
         >
           <span className="font-bold whitespace-nowrap">{overlay.text}</span>
@@ -285,7 +312,7 @@ const PhotoTextOverlay = ({
           </div>
 
           <p className="text-white/60 text-sm mt-4">
-            Tap anywhere to position text • Double-tap to remove
+            {editingOverlayId ? 'Editing text • Tap ✓ to save' : 'Tap text to edit • Double-tap to remove'}
           </p>
         </div>
       )}

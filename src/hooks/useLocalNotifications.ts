@@ -19,6 +19,7 @@ interface ScheduleTask {
   date: string;
   isCompleted: boolean;
   isReminder: boolean;
+  reminderMinutes?: number;
 }
 
 export const useLocalNotifications = () => {
@@ -199,15 +200,21 @@ export const useLocalNotifications = () => {
             return;
           }
 
-          // Schedule 1-hour reminder
+          // Schedule reminder based on user preference (default 60 minutes)
+          const reminderMinutes = task.reminderMinutes || 60;
           const reminderTime = new Date(taskTime);
-          reminderTime.setHours(reminderTime.getHours() - 1);
+          reminderTime.setMinutes(reminderTime.getMinutes() - reminderMinutes);
+          
+          // Format reminder text
+          const reminderText = reminderMinutes >= 60 
+            ? `${reminderMinutes / 60} hour${reminderMinutes > 60 ? 's' : ''}` 
+            : `${reminderMinutes} minute${reminderMinutes > 1 ? 's' : ''}`;
           
           if (reminderTime.getTime() > now.getTime()) {
             notifications.push({
               id: notificationId++,
               title: `🔔 Task Reminder: ${task.title}`,
-              body: `Scheduled for ${formatTime(task.scheduledTime)}. ${task.description || ''}`,
+              body: `Starting in ${reminderText} at ${formatTime(task.scheduledTime)}. ${task.description || ''}`,
               schedule: { at: reminderTime },
               sound: 'default',
               smallIcon: 'ic_stat_icon',
