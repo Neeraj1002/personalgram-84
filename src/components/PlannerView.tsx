@@ -250,10 +250,10 @@ const PlannerView = ({
   };
 
   // Schedule helpers
-  // Generate 21 days starting from Sunday of the week containing `currentDate`
+  // Generate days: 14 days before + current week + 14 days after (total 35 days) centered on currentDate
   const weekDays = useMemo(() => {
-    const start = startOfWeek(currentDate, { weekStartsOn: 0 }); // Sunday
-    return Array.from({ length: 21 }, (_, i) => addDays(start, i));
+    const start = addDays(startOfWeek(currentDate, { weekStartsOn: 0 }), -14); // 2 weeks before Sunday of current week
+    return Array.from({ length: 35 }, (_, i) => addDays(start, i));
   }, [currentDate]);
   
   // Function to navigate back to today
@@ -502,8 +502,8 @@ const PlannerView = ({
                       <Calendar
                         mode="single"
                         selected={selectedDate}
-                        defaultMonth={new Date()}
-                        numberOfMonths={24}
+                        defaultMonth={addMonths(new Date(), -12)}
+                        numberOfMonths={36}
                         onSelect={(date) => {
                           if (date) {
                             setSelectedDate(date);
