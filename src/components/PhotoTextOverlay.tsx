@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Type, Check, X, Palette } from 'lucide-react';
+import { Type, Check, X } from 'lucide-react';
 
 export interface TextOverlay {
   id: string;
@@ -48,12 +48,59 @@ const PhotoTextOverlay = ({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [editingOverlayId, setEditingOverlayId] = useState<string | null>(null);
+  
+  // Pinch-to-resize state
+  const [pinchingId, setPinchingId] = useState<string | null>(null);
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number>(0);
+  const [initialFontSize, setInitialFontSize] = useState<number>(24);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isEditing]);
+
+  // Calculate distance between two touch points
+  const getTouchDistance = (touch1: React.Touch, touch2: React.Touch): number => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // Handle pinch start (two-finger touch on overlay)
+  const handlePinchStart = useCallback((e: React.TouchEvent, overlay: TextOverlay) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      e.stopPropagation();
+      const distance = getTouchDistance(e.touches[0], e.touches[1]);
+      setInitialPinchDistance(distance);
+      setInitialFontSize(overlay.fontSize);
+      setPinchingId(overlay.id);
+      setDraggingId(null); // Cancel any drag
+    }
+  }, []);
+
+  // Handle pinch move (resize text)
+  const handlePinchMove = useCallback((e: React.TouchEvent) => {
+    if (!pinchingId || e.touches.length < 2) return;
+    
+    e.preventDefault();
+    const currentDistance = getTouchDistance(e.touches[0], e.touches[1]);
+    const scale = currentDistance / initialPinchDistance;
+    const newFontSize = Math.max(12, Math.min(72, initialFontSize * scale));
+    
+    onOverlaysChange(
+      overlays.map((o) =>
+        o.id === pinchingId ? { ...o, fontSize: Math.round(newFontSize) } : o
+      )
+    );
+  }, [pinchingId, initialPinchDistance, initialFontSize, overlays, onOverlaysChange]);
+
+  // Handle pinch end
+  const handlePinchEnd = useCallback(() => {
+    setPinchingId(null);
+    setInitialPinchDistance(0);
+  }, []);
 
   const handleImageTap = (e: React.MouseEvent | React.TouchEvent) => {
     if (draggingId) return;
@@ -201,9 +248,18 @@ const PhotoTextOverlay = ({
       onClick={!isEditing ? handleImageTap : undefined}
       onTouchStart={!isEditing ? handleImageTap : undefined}
       onMouseMove={draggingId ? handleDragMove : undefined}
-      onTouchMove={draggingId ? handleDragMove : undefined}
+      onTouchMove={(e) => {
+        if (pinchingId) {
+          handlePinchMove(e);
+        } else if (draggingId) {
+          handleDragMove(e);
+        }
+      }}
       onMouseUp={handleDragEnd}
-      onTouchEnd={handleDragEnd}
+      onTouchEnd={() => {
+        handleDragEnd();
+        handlePinchEnd();
+      }}
       onMouseLeave={handleDragEnd}
     >
       {/* Image */}
@@ -217,7 +273,7 @@ const PhotoTextOverlay = ({
       {overlays.map((overlay) => (
         <div
           key={overlay.id}
-          className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move select-none"
+          className="absolute transform -translate-x-1/2 -translate-y-1/2 cursor-move select-none touch-none"
           style={{
             left: `${overlay.x}%`,
             top: `${overlay.y}%`,
@@ -229,14 +285,21 @@ const PhotoTextOverlay = ({
                 : '0 0 4px rgba(0,0,0,0.8)',
           }}
           onMouseDown={(e) => handleDragStart(e, overlay)}
-          onTouchStart={(e) => handleDragStart(e, overlay)}
+          onTouchStart={(e) => {
+            // Check for two-finger pinch
+            if (e.touches.length === 2) {
+              handlePinchStart(e, overlay);
+            } else if (e.touches.length === 1) {
+              handleDragStart(e, overlay);
+            }
+          }}
           onClick={(e) => {
             e.stopPropagation();
             handleEditOverlay(overlay);
           }}
           onDoubleClick={() => handleRemoveOverlay(overlay.id)}
         >
-          <span className="font-bold whitespace-nowrap">{overlay.text}</span>
+          <span className="font-bold whitespace-pre-wrap max-w-[80vw] text-center">{overlay.text}</span>
         </div>
       ))}
 

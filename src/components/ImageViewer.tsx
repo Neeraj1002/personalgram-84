@@ -207,7 +207,7 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
                     : '0 0 4px rgba(0,0,0,0.8)',
               }}
             >
-              <span className="font-bold whitespace-nowrap">{overlay.text}</span>
+              <span className="font-bold whitespace-pre-wrap max-w-[80vw] text-center">{overlay.text}</span>
             </div>
           ))}
         </div>
