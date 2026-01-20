@@ -170,8 +170,8 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
         </div>
       )}
 
-      {/* Main Image Area */}
-      <div className="flex-1 flex items-center justify-center relative px-4">
+      {/* Main Image Area - Full screen */}
+      <div className="flex-1 flex items-center justify-center relative">
         {/* Previous Button (Desktop) */}
         {photos.length > 1 && (
           <Button
@@ -184,12 +184,12 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
           </Button>
         )}
 
-        {/* Image with text overlays */}
-        <div className="max-w-full max-h-full flex items-center justify-center relative">
+        {/* Image with text overlays - full screen */}
+        <div className="w-full h-full flex items-center justify-center relative">
           <img
             src={currentPhoto.url}
             alt={`Memory from ${new Date(currentPhoto.timestamp).toLocaleDateString()}`}
-            className="max-w-full max-h-[70vh] object-contain rounded-lg"
+            className="w-full h-full object-contain"
           />
           {/* Render text overlays */}
           {currentPhoto.textOverlays?.map((overlay) => (
@@ -225,30 +225,9 @@ export const ImageViewer = ({ photos, initialIndex, onClose, onDelete }: ImageVi
         )}
       </div>
 
-      {/* Footer with date */}
-      <div className="p-4 text-center text-white">
-        <p className="text-sm opacity-80">
-          {new Date(currentPhoto.timestamp).toLocaleDateString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
-        </p>
-        
-        {/* Swipe hint for mobile */}
-        {photos.length > 1 && (
-          <p className="text-xs opacity-50 mt-2 md:hidden">
-            Swipe left or right to navigate
-          </p>
-        )}
-      </div>
-
-      {/* Dots indicator */}
+      {/* Dots indicator - positioned at bottom */}
       {photos.length > 1 && photos.length <= 10 && (
-        <div className="flex justify-center gap-2 pb-6">
+        <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2">
           {photos.map((_, index) => (
             <button
               key={index}
